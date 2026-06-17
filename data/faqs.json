@@ -1,0 +1,1890 @@
+[
+  {
+    "id": "1.1",
+    "question": "what is the vicharanashala internship?",
+    "answer": "a two-month, full-time engagement at the vicharanashala lab, a research lab at iit ropar. you will work on a real open-source project under a mentor, after a short training phase tailored to where you already are. the internship is free — we do not charge, and the work is real.",
+    "category": "about-vins",
+    "tags": [
+      "internship",
+      "overview",
+      "iit-ropar",
+      "open-source",
+      "free"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "1.2",
+    "question": "what is vins?",
+    "answer": "vins is the vicharanashala internship — an online programme open to anyone who clears our interview. the work is real open-source contribution under a mentor, the certificate is from the vicharanashala lab for education design at iit ropar, and the programme itself is free (we charge nothing). there is no stipend. if you are seeing a yellow vins panel on your result page, you are selected.",
+    "category": "about-vins",
+    "tags": [
+      "vins",
+      "overview",
+      "stipend",
+      "certificate",
+      "selection"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "1.3",
+    "question": "what are the phases of vins, and what do the badges mean?",
+    "answer": "vins is structured as four phases.",
+    "category": "about-vins",
+    "tags": [
+      "phases",
+      "bronze",
+      "silver",
+      "gold",
+      "platinum",
+      "badges"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "1.4",
+    "question": "who is the internship for? are alumni eligible?",
+    "answer": "the internship is for currently-enrolled students at any college or university.",
+    "category": "about-vins",
+    "tags": [
+      "eligibility",
+      "alumni",
+      "enrolled",
+      "ug",
+      "pg",
+      "phd"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "1.5",
+    "question": "is this the same as iit ropar's official summer research internship?",
+    "answer": "no. summership 2026 is a vled lab initiative.",
+    "category": "about-vins",
+    "tags": [
+      "iit-ropar",
+      "official",
+      "summership",
+      "vled"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "1.6",
+    "question": "i have to attend my class tomorrow/today/some day — can i take leave?",
+    "answer": "leave is not permitted.",
+    "category": "about-vins",
+    "tags": [
+      "leave",
+      "classes",
+      "attendance",
+      "exams"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "2.1",
+    "question": "when can i start?",
+    "answer": "you can start any time in 2026.",
+    "category": "dates-and-timeline",
+    "tags": [
+      "start-date",
+      "timeline",
+      "cohort",
+      "deadline",
+      "december"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "2.2",
+    "question": "how long is the internship?",
+    "answer": "two months from your chosen start date, with an optional one-month grace period.",
+    "category": "dates-and-timeline",
+    "tags": [
+      "duration",
+      "two-months",
+      "grace-period"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "2.3",
+    "question": "can i start in july, august or later if i have exams now?",
+    "answer": "yes — but only if your exams genuinely make an earlier start impossible.",
+    "category": "dates-and-timeline",
+    "tags": [
+      "exams",
+      "july",
+      "august",
+      "defer",
+      "start-date"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "2.4",
+    "question": "can i start with the cohort and take a relaxation during my exam window?",
+    "answer": "no. this is not an arrangement we offer.",
+    "category": "dates-and-timeline",
+    "tags": [
+      "exams",
+      "relaxation",
+      "full-time",
+      "attendance"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "2.5",
+    "question": "can i take leave or get an exemption during the internship for an exam scheduled in june?",
+    "answer": "the attendance rule is firm.",
+    "category": "dates-and-timeline",
+    "tags": [
+      "leave",
+      "exemption",
+      "exam",
+      "attendance",
+      "55-days"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "2.6",
+    "question": "are orientation session recordings shared with interns?",
+    "answer": "recordings of the sessions will not be provided.",
+    "category": "dates-and-timeline",
+    "tags": [
+      "recordings",
+      "orientation",
+      "sessions"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.1",
+    "question": "what dates do i put on the noc?",
+    "answer": "default: your chosen start date to your start plus 2 months.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "dates",
+      "start-date",
+      "end-date"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.2",
+    "question": "who can sign the noc?",
+    "answer": "any authorised signatory at your college: hod, acting hod, principal, dean, director, or t&p officer.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "signatory",
+      "hod",
+      "principal",
+      "dean"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.3",
+    "question": "when do i submit the noc? is the deadline hard?",
+    "answer": "there is no specific calendar cut-off date.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "deadline",
+      "submit",
+      "cohort"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.4",
+    "question": "what format should i use? do i need to design it myself?",
+    "answer": "no — we provide a printable noc format.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "format",
+      "download",
+      "upload",
+      "dashboard"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.5",
+    "question": "what if my college gives me an noc in their own format?",
+    "answer": "a college's own noc format is acceptable, as long as all required entries are present.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "college-format",
+      "signature",
+      "requirements"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.6",
+    "question": "does it need to be signed by hand?",
+    "answer": "yes. three things are required.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "handwritten",
+      "stamp",
+      "digital-signature"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.7",
+    "question": "can my hod email the noc instead of uploading it?",
+    "answer": "no. your noc must be uploaded by you, the student, from your dashboard.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "email",
+      "upload",
+      "dashboard",
+      "hod"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.8",
+    "question": "how do i download and upload the noc?",
+    "answer": "both happen on your dashboard at samagama.in.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "download",
+      "upload",
+      "dashboard",
+      "samagama"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.9",
+    "question": "what if my noc is not formally verified?",
+    "answer": "noc verification takes time — typically anywhere between an hour and one full working day.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "verification",
+      "offer-letter",
+      "timeline"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.10",
+    "question": "my online course (masai, nptel, coursera, etc.) won't issue an noc. what do i do?",
+    "answer": "the internship is open only to candidates currently enrolled in a full-time degree programme.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "online-course",
+      "masai",
+      "nptel",
+      "eligibility"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.11",
+    "question": "my hod/college official wants written confirmation before signing my noc. what do i show them?",
+    "answer": "your selection is already confirmed the moment your yellow vins result panel appears.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "confirmation",
+      "hod",
+      "offer-letter",
+      "selection"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "3.12",
+    "question": "can prof. sudarshan iyengar or a faculty member from iit ropar sign my noc?",
+    "answer": "your noc must be signed by an authorised signatory at the institution where you are enrolled.",
+    "category": "noc",
+    "tags": [
+      "noc",
+      "iit-ropar",
+      "sudarshan",
+      "signatory",
+      "eligibility"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.1",
+    "question": "how do i know i am selected?",
+    "answer": "if you can see your yellow vins result panel on samagama.in, you are selected.",
+    "category": "selection-and-offer",
+    "tags": [
+      "selection",
+      "result",
+      "dashboard",
+      "vins"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.2",
+    "question": "how do i opt into vins?",
+    "answer": "tell yaksha in the chat: 'i want to take up the online internship without stipend.'",
+    "category": "selection-and-offer",
+    "tags": [
+      "opt-in",
+      "yaksha",
+      "selection",
+      "chat"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.3",
+    "question": "when do i get the offer letter?",
+    "answer": "your offer letter is issued automatically once you upload your signed institutional noc.",
+    "category": "selection-and-offer",
+    "tags": [
+      "offer-letter",
+      "noc",
+      "dashboard",
+      "download",
+      "timeline"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.4",
+    "question": "will i get a certificate?",
+    "answer": "yes — every intern who completes the internship gets a certificate from vicharanashala, iit ropar.",
+    "category": "selection-and-offer",
+    "tags": [
+      "certificate",
+      "completion",
+      "dropout"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.5",
+    "question": "how do i confirm my internship dates?",
+    "answer": "once you have opted into vins in the chat with yaksha, log in to samagama.in.",
+    "category": "selection-and-offer",
+    "tags": [
+      "dates",
+      "confirm",
+      "dashboard",
+      "start-date",
+      "end-date"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.6",
+    "question": "i am a minor/major in ai student, can i join the programme?",
+    "answer": "minor/major in ai course from iit ropar is a certification course with a different track.",
+    "category": "selection-and-offer",
+    "tags": [
+      "iit-ropar",
+      "minor",
+      "major",
+      "eligibility",
+      "noc"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.7",
+    "question": "how do i accept the offer letter?",
+    "answer": "acceptance happens entirely on your dashboard at samagama.in.",
+    "category": "selection-and-offer",
+    "tags": [
+      "offer-letter",
+      "accept",
+      "honor-code",
+      "terms",
+      "dashboard"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.8",
+    "question": "can i change my internship dates?",
+    "answer": "before the offer letter is issued: yes. after: no.",
+    "category": "selection-and-offer",
+    "tags": [
+      "dates",
+      "change",
+      "offer-letter",
+      "deadline"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.9",
+    "question": "my noc is not ready but my start date is approaching. what do i do?",
+    "answer": "get your signed institutional noc uploaded as soon as you can.",
+    "category": "selection-and-offer",
+    "tags": [
+      "noc",
+      "start-date",
+      "delay",
+      "upload"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.10",
+    "question": "when does my internship actually begin? will i receive a notification on the day?",
+    "answer": "your internship begins on the start date you confirmed on the dashboard.",
+    "category": "selection-and-offer",
+    "tags": [
+      "start-date",
+      "day-1",
+      "notification",
+      "bronze"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.11",
+    "question": "can i switch from vins (online) to vise (offline) after being selected?",
+    "answer": "the two tracks are finalised at the interview stage, and we do not move candidates between them.",
+    "category": "selection-and-offer",
+    "tags": [
+      "vins",
+      "vise",
+      "switch",
+      "online",
+      "offline"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "4.12",
+    "question": "can i change my internship dates after the offer letter?",
+    "answer": "no. once your offer letter has been issued, the dates you confirmed are final.",
+    "category": "selection-and-offer",
+    "tags": [
+      "dates",
+      "change",
+      "offer-letter",
+      "final"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "5.1",
+    "question": "what will i work on?",
+    "answer": "a real open-source project from vicharanashala's portfolio.",
+    "category": "project-and-work",
+    "tags": [
+      "project",
+      "open-source",
+      "ai-ml",
+      "web",
+      "nlp"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "5.2",
+    "question": "how many hours per day?",
+    "answer": "plan for 6 to 10 hours a day, sometimes more during the build phase.",
+    "category": "project-and-work",
+    "tags": [
+      "hours",
+      "full-time",
+      "workload",
+      "commitment"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "5.3",
+    "question": "who is my mentor?",
+    "answer": "you will work with the lab's research and engineering team.",
+    "category": "project-and-work",
+    "tags": [
+      "mentor",
+      "team",
+      "research",
+      "assignment"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "5.4",
+    "question": "is there a stipend?",
+    "answer": "no. the internship is unpaid.",
+    "category": "project-and-work",
+    "tags": [
+      "stipend",
+      "unpaid",
+      "compensation"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "5.5",
+    "question": "do i need my own laptop? should i preload any software?",
+    "answer": "yes — a personal laptop is required.",
+    "category": "project-and-work",
+    "tags": [
+      "laptop",
+      "linux",
+      "macos",
+      "windows",
+      "ssh",
+      "setup"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "5.6",
+    "question": "i am using a different email on github / zoom / the learning platform. is that okay?",
+    "answer": "no. your registered email is your sole identifier across all programme platforms.",
+    "category": "project-and-work",
+    "tags": [
+      "email",
+      "github",
+      "zoom",
+      "platforms",
+      "registered"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "5.7",
+    "question": "why has my mentor not been assigned yet, or contacted me on day 1?",
+    "answer": "mentors are not assigned on day 1 of the internship.",
+    "category": "project-and-work",
+    "tags": [
+      "mentor",
+      "assignment",
+      "day-1",
+      "bronze",
+      "discord"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "6.1",
+    "question": "what are the official communication channels?",
+    "answer": "official channels only. the announcements section on samagama.in is how we notify you.",
+    "category": "communication",
+    "tags": [
+      "communication",
+      "yaksha",
+      "announcements",
+      "whatsapp",
+      "forum",
+      "escalation"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "7.1",
+    "question": "my interview is not marked as complete on the dashboard — what do i do?",
+    "answer": "a data-sync issue sometimes occurs where the chat session closes but the interview record doesn't update.",
+    "category": "interview",
+    "tags": [
+      "interview",
+      "dashboard",
+      "incomplete",
+      "sync"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "8.1",
+    "question": "does vicharanashala send a grade report or evaluation to my university for internship credit?",
+    "answer": "vicharanashala does not send formal evaluation or grade reports to universities.",
+    "category": "certificate",
+    "tags": [
+      "certificate",
+      "university",
+      "grade",
+      "evaluation"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "8.2",
+    "question": "does the vicharanashala internship certificate specify whether it was completed online or offline?",
+    "answer": "the certificate you receive on completing the internship is the same for both tracks.",
+    "category": "certificate",
+    "tags": [
+      "certificate",
+      "online",
+      "offline",
+      "mode"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "8.3",
+    "question": "will the completion certificate be a physical hardcopy or an e-certificate?",
+    "answer": "the completion certificate is issued as an e-certificate.",
+    "category": "certificate",
+    "tags": [
+      "certificate",
+      "e-certificate",
+      "download",
+      "physical"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "8.4",
+    "question": "is there a whatsapp group for candidates during the internship?",
+    "answer": "no. see section 6.1 for the official communication channels.",
+    "category": "certificate",
+    "tags": [
+      "whatsapp",
+      "communication",
+      "group"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.1",
+    "question": "what is rosetta?",
+    "answer": "rosetta is your internship journal — a 65-day document, one entry per day.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "journal",
+      "65-days",
+      "completion"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.2",
+    "question": "why does this exist? is it just busywork?",
+    "answer": "no. it exists for two reasons: for you and for us.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "journal",
+      "purpose",
+      "reflection"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.3",
+    "question": "what is a 'thinking routine'?",
+    "answer": "each day in rosetta has a thinking routine — a short framework that gives your reflection a specific shape.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "thinking-routine",
+      "prompts"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.4",
+    "question": "how do i get my rosetta journal?",
+    "answer": "the rosetta template is available as a google doc — make a copy and save it to your drive.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "template",
+      "google-doc",
+      "setup"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.5",
+    "question": "how do i use it day to day?",
+    "answer": "open your rosetta google doc, scroll to the entry for today's day number, fill in the date, read the thinking routine, answer the three prompts.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "daily",
+      "how-to",
+      "entries"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.6",
+    "question": "how long should each entry be?",
+    "answer": "there is no minimum or maximum word count. three to five sentences per prompt is usually enough.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "entry-length",
+      "word-count"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.7",
+    "question": "what is the one rule?",
+    "answer": "write what is true. not what sounds impressive.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "honesty",
+      "ai",
+      "rules"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.8",
+    "question": "can i use chatgpt or any ai tool to write my entries?",
+    "answer": "no. this is the one firm rule of rosetta.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "ai",
+      "chatgpt",
+      "prohibited"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.9",
+    "question": "what if i miss a day?",
+    "answer": "fill it in as soon as you can. write the actual date you are filling it in.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "missed-entry",
+      "late"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.10",
+    "question": "will anyone read my journal during the internship?",
+    "answer": "no. we will not access your journal during the 65 days.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "privacy",
+      "reading",
+      "monitoring"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.11",
+    "question": "can the prompts change mid-internship?",
+    "answer": "occasionally we may update a prompt for a specific day.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "prompts",
+      "updates",
+      "announcements"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.12",
+    "question": "how do i submit rosetta at the end?",
+    "answer": "on or before day 65, share your rosetta google doc with the programme coordinator's email.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "submission",
+      "google-doc",
+      "certificate"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.13",
+    "question": "i have a question about rosetta that is not answered here. what do i do?",
+    "answer": "ask yaksha first.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "support",
+      "yaksha"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "9.14",
+    "question": "my college requires a written confirmation that the internship is self-paced — what document can i share?",
+    "answer": "this is not a self-paced internship, but a very rigorous and time-demanding one.",
+    "category": "rosetta",
+    "tags": [
+      "rosetta",
+      "self-paced",
+      "college",
+      "confirmation"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.1",
+    "question": "i've already completed a course with you in an earlier cohort — am i exempt from repeating it?",
+    "answer": "yes. if you completed the vinternship, pinternship, mern, or ai course with us in an earlier cohort, you don't have to repeat it.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "exemption",
+      "vinternship",
+      "vibe",
+      "courses",
+      "95-percent"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.2",
+    "question": "how do i register for the ai fundamentals course on vibe?",
+    "answer": "click the ai fundamentals registration link posted in the announcements section on samagama.in.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "vibe",
+      "registration",
+      "ai-fundamentals",
+      "course"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.3",
+    "question": "i registered on vibe with a different email than my samagama email — is that ok?",
+    "answer": "please use the same email on both platforms.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "vibe",
+      "email",
+      "samagama",
+      "gmail",
+      "mismatch"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.4",
+    "question": "are live sessions mandatory if i'm on the viva route?",
+    "answer": "yes — live sessions are mandatory for every intern, regardless of path.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "live-sessions",
+      "mandatory",
+      "viva",
+      "zoom"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.5",
+    "question": "when and how do i get the zoom link for the kickoff meeting?",
+    "answer": "the kickoff orientation zoom link is delivered through email and your yaksha chat portal.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "kickoff",
+      "zoom",
+      "orientation",
+      "link"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.6",
+    "question": "how do i get the link for the daily zoom standups? are they mandatory?",
+    "answer": "daily zoom standup links are posted in the announcements section on your samagama.in dashboard.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "standup",
+      "zoom",
+      "mandatory",
+      "link",
+      "announcements"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.7",
+    "question": "how do i provide my zoom id, and why does it matter?",
+    "answer": "on your dashboard, just before 'start the internship,' you'll see a step called 'provide your zoom id.'",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "zoom-id",
+      "dashboard",
+      "attendance",
+      "tracking"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.8",
+    "question": "i saved the wrong zoom id — can i change it?",
+    "answer": "once saved, your zoom id is final and cannot be changed by you.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "zoom-id",
+      "change",
+      "escalate"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.9",
+    "question": "can we register and start the vibe courses before our internship date formally starts?",
+    "answer": "you will receive the vibe course link only after your internship starts.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "vibe",
+      "courses",
+      "start-date",
+      "access"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.10",
+    "question": "what are the attendance and participation rules?",
+    "answer": "attendance and participation are tracked strictly — at least 85% live-session attendance, 85% poll participation, and quizzes passed at 50%.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "attendance",
+      "85-percent",
+      "participation",
+      "polls",
+      "rolling"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.11",
+    "question": "what are spurti points (sp)? do they affect my internship?",
+    "answer": "spurti points are a platform feature that tracks your engagement with the programme.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "spurti-points",
+      "sp",
+      "engagement",
+      "beta"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.12",
+    "question": "what are the live-session (zoom) participation and conduct rules?",
+    "answer": "treat every live session as a professional classroom.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "zoom",
+      "conduct",
+      "video",
+      "rules",
+      "live-session"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "10.13",
+    "question": "i got 'failed to submit poll. error: 100035000' during a session — what does it mean?",
+    "answer": "this error appears when the poll closed before your response was submitted.",
+    "category": "orientation-and-vibe",
+    "tags": [
+      "zoom",
+      "poll",
+      "error",
+      "100035000",
+      "credit"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.1",
+    "question": "what are spurti points?",
+    "answer": "spurti points, or sp, are a points layer on the platform that reflects your overall engagement.",
+    "category": "spurti-points",
+    "tags": [
+      "spurti-points",
+      "sp",
+      "engagement",
+      "indicator"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.2",
+    "question": "is sp a finished system?",
+    "answer": "no. spurti points are still being actively built and refined.",
+    "category": "spurti-points",
+    "tags": [
+      "spurti-points",
+      "beta",
+      "work-in-progress"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.3",
+    "question": "how much importance should i give to my sp number?",
+    "answer": "please do not read too much into the number. sp is an early beta feature.",
+    "category": "spurti-points",
+    "tags": [
+      "spurti-points",
+      "importance",
+      "number"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.4",
+    "question": "can i be terminated or excused because of low sp?",
+    "answer": "no. the programme team will not terminate or excuse any intern on the basis of spurti points alone.",
+    "category": "spurti-points",
+    "tags": [
+      "spurti-points",
+      "termination",
+      "decisions"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.5",
+    "question": "what if my sp shows as zero or even negative?",
+    "answer": "there is genuinely no cause for concern.",
+    "category": "spurti-points",
+    "tags": [
+      "spurti-points",
+      "zero",
+      "negative",
+      "beta"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.6",
+    "question": "does a higher sp bring any benefits?",
+    "answer": "yes, in a positive way. interns who build up higher spurti points may become eligible for small perks.",
+    "category": "spurti-points",
+    "tags": [
+      "spurti-points",
+      "benefits",
+      "perks",
+      "conduct"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.7",
+    "question": "if sp does not determine outcomes, what does?",
+    "answer": "your attendance and live participation are what the programme watches closely.",
+    "category": "spurti-points",
+    "tags": [
+      "spurti-points",
+      "attendance",
+      "participation",
+      "outcomes"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.8",
+    "question": "what are the participation requirements tracked strictly?",
+    "answer": "85% live zoom session time, 85% polls answered, and every quiz attempted and passed at 50%.",
+    "category": "spurti-points",
+    "tags": [
+      "attendance",
+      "85-percent",
+      "polls",
+      "participation",
+      "rolling"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.9",
+    "question": "what does 'rolling basis' mean?",
+    "answer": "the programme looks at your most recent five working days at any given point in time.",
+    "category": "spurti-points",
+    "tags": [
+      "rolling-basis",
+      "5-days",
+      "attendance",
+      "window"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.10",
+    "question": "what happens if i fall below the required participation level?",
+    "answer": "you will be moved from the current batch into a later batch.",
+    "category": "spurti-points",
+    "tags": [
+      "participation",
+      "below-threshold",
+      "batch",
+      "noc",
+      "dates"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "11.11",
+    "question": "how are spurti points calculated?",
+    "answer": "every intern starts with a base of 100 sp credited on their official internship start date.",
+    "category": "spurti-points",
+    "tags": [
+      "spurti-points",
+      "calculation",
+      "100-base",
+      "sessions"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "12.1",
+    "question": "i'm unable to type in the chat after clicking 'interact with yaksha' — what should i do?",
+    "answer": "the chat input is only active after you have clicked the 'interact with yaksha' button.",
+    "category": "samagama-platform",
+    "tags": [
+      "yaksha",
+      "chat",
+      "interact",
+      "login",
+      "samagama"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.1",
+    "question": "how do i log in to vibe?",
+    "answer": "link for the website: https://vibe.vicharanashala.ai/auth — sign up as a student with your registered email.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "login",
+      "signup",
+      "student",
+      "course"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.2",
+    "question": "invite accepted but shows 'no course enrolled'?",
+    "answer": "make sure you are logged in with the correct registered email id.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "no-course-enrolled",
+      "cookies",
+      "dns",
+      "troubleshoot"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.3",
+    "question": "why are videos stuck or repeating?",
+    "answer": "this may happen due to vibe's monitored learning system.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "video",
+      "stuck",
+      "repeating",
+      "camera"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.4",
+    "question": "can i use a mobile or tablet?",
+    "answer": "no, only desktop/laptop is supported.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "mobile",
+      "tablet",
+      "desktop",
+      "supported"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.5",
+    "question": "i'm experiencing video issues (stuck, looping, skipping) on vibe. how do i troubleshoot?",
+    "answer": "try these troubleshooting steps in order: refresh, inspect browser console, log out and in, use a different browser, clear cache.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "video-issues",
+      "troubleshoot",
+      "browser",
+      "escalate"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.6",
+    "question": "i completed all videos and quizzes but my progress is still less than 100%. what should i do?",
+    "answer": "please do not worry. verify you've completed all course items (1006/1006). try refreshing or clearing cache.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "progress",
+      "100-percent",
+      "completion",
+      "quizzes"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.7",
+    "question": "i feel the vibe content or platform is not good or i am unhappy. can i request an exception?",
+    "answer": "vibe is built and continuously improved by interns and students themselves.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "unhappy",
+      "exception",
+      "alternative",
+      "proctored-exam"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.8",
+    "question": "is the vibe consent form compulsory? what if i don't want to grant camera access?",
+    "answer": "yes — the consent form is compulsory.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "consent",
+      "camera",
+      "proctoring",
+      "mandatory"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.9",
+    "question": "what are penalty scores on the vibe platform, and how do they affect our performance?",
+    "answer": "penalty scores are generated when anomalies are detected during your activity on the vibe platform.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "penalty",
+      "hp",
+      "anomaly",
+      "quiz"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.10",
+    "question": "when should i use the flag option on vibe, and when should i contact support?",
+    "answer": "use the flag feature on vibe only for course content-related issues.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "flag",
+      "support",
+      "content-issues",
+      "yaksha"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.11",
+    "question": "what is linear progression on vibe?",
+    "answer": "linear progression is enabled for every course on vibe — each item must be completed in order.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "linear-progression",
+      "sequential",
+      "order"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.12",
+    "question": "can i use the left navigation panel to jump ahead to a later video or quiz?",
+    "answer": "no. the left navigation panel is meant only as a progress map, not a jump-to-anywhere menu.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "navigation",
+      "jump-ahead",
+      "left-panel"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.13",
+    "question": "i am seeing a red 'access restricted' banner. is this a bug?",
+    "answer": "no, this is not a bug. it appears when you try to open an item before completing all prior items.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "access-restricted",
+      "error",
+      "banner"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.14",
+    "question": "how do i resolve the 'access restricted' error?",
+    "answer": "go back to the left panel, find the item without a completion tick, complete it, then refresh.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "access-restricted",
+      "resolve",
+      "missed-item"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.15",
+    "question": "why does vibe sometimes make me re-watch a clip after a quiz?",
+    "answer": "if your answer to the check-in quiz didn't go through correctly, vibe will take you back to the same clip.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "re-watch",
+      "quiz",
+      "clip",
+      "design"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.16",
+    "question": "what kinds of quiz questions will i see on vibe?",
+    "answer": "vibe quizzes come in four formats: pick one (mcq), pick one or more (msq), type a number (nat), true or false.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "quiz-types",
+      "mcq",
+      "msq",
+      "nat",
+      "true-false"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.17",
+    "question": "are the same proctoring rules applied to every course on vibe?",
+    "answer": "no — vibe's proctoring system is modular and instructor-controlled.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "proctoring",
+      "modular",
+      "instructor",
+      "settings"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.18",
+    "question": "what does the 'quiet helper' on vibe actually do?",
+    "answer": "a small helper runs on your device using your camera and microphone to check basic learning conditions.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "quiet-helper",
+      "camera",
+      "microphone",
+      "real-time"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.19",
+    "question": "does vibe record long videos of me while i'm learning?",
+    "answer": "no. vibe does not continuously record videos of you.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "recording",
+      "storage",
+      "privacy",
+      "camera"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.20",
+    "question": "what is the single most common avoidable mistake learners make?",
+    "answer": "sitting with a window directly behind you during the day, making your face appear as a dark silhouette.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "lighting",
+      "window",
+      "camera",
+      "common-mistake"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.21",
+    "question": "why does the lesson keep pausing or restarting even when i'm paying attention?",
+    "answer": "the cause is almost always something small in your environment, not the platform itself.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "pausing",
+      "restarting",
+      "environment",
+      "troubleshoot"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.22",
+    "question": "can i read the quiz questions aloud or mutter to myself while watching?",
+    "answer": "it's best not to. the microphone listens for sustained voices in the room.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "reading-aloud",
+      "microphone",
+      "silence"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.23",
+    "question": "can i study with a friend on camera since we're learning together?",
+    "answer": "in most courses, no. only the registered learner should be in the camera frame.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "group-study",
+      "single-face",
+      "proctoring"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.24",
+    "question": "will i lose my progress if i clear my browser or reinstall it?",
+    "answer": "no. your progress is saved on the server, tied to your registered email.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "progress",
+      "browser",
+      "cache",
+      "server"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.25",
+    "question": "is there a recommended daily learning rhythm on vibe?",
+    "answer": "yes — small, regular sessions work far better than long marathon sessions.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "daily-rhythm",
+      "pacing",
+      "consistency"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.26",
+    "question": "what should my 'study corner' look like before i start a vibe session?",
+    "answer": "light in front of your face, just you in the camera frame, and a reasonably quiet room.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "study-corner",
+      "setup",
+      "environment"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "13.27",
+    "question": "i'm facing a technical issue on vibe that i can't resolve. is there live support available?",
+    "answer": "yes. a live support breakout session is held every day at 2:00 pm.",
+    "category": "vibe-platform",
+    "tags": [
+      "vibe",
+      "support",
+      "live",
+      "2pm",
+      "breakout"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.1",
+    "question": "is team formation compulsory?",
+    "answer": "yes. all projects in phase 2 and phase 3 must be completed in teams.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "formation",
+      "mandatory",
+      "phase-2"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.2",
+    "question": "what is the size of a team?",
+    "answer": "the team size is fixed at four members.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "size",
+      "four-members"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.3",
+    "question": "how are teams formed?",
+    "answer": "for students who joined on may 15 and 16: teams were formed through a structured activity. for later joiners: randomly assigned.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "formation",
+      "activity",
+      "random"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.4",
+    "question": "i started on may 15/16 but couldn't form a team during the activity. what happens now?",
+    "answer": "you will be randomly assigned to a team.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "unassigned",
+      "random",
+      "may-15"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.5",
+    "question": "there was a typo in our email addresses during team formation. can we fix it?",
+    "answer": "no action is required from your side. the administration will verify and match email ids with names.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "email",
+      "typo",
+      "admin"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.6",
+    "question": "i formed a team with only two members. will it be considered?",
+    "answer": "no. teams with fewer than four members will be expanded by adding additional members.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "two-members",
+      "incomplete",
+      "four"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.7",
+    "question": "what if a team member leaves or becomes ineligible during phase 1?",
+    "answer": "the administration will attempt to assign a replacement member.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "dropout",
+      "replacement",
+      "phase-1"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.8",
+    "question": "can i form a team with someone from my own college?",
+    "answer": "no. teams must consist of members from different institutions.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "same-college",
+      "institution",
+      "networking"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.9",
+    "question": "can i form a team with students from my iit mbs cohort?",
+    "answer": "no. you are encouraged to collaborate with participants outside your existing cohort.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "iit-mbs",
+      "cohort",
+      "collaboration"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.10",
+    "question": "can we change our team name after submission?",
+    "answer": "yes, team names are tentative and can be changed.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "name",
+      "change"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.11",
+    "question": "what if multiple teams choose the same name?",
+    "answer": "teams will be distinguished using suffixes (e.g., team x-1, team x-2).",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "same-name",
+      "suffix"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.12",
+    "question": "what should i do if i face issues within my team?",
+    "answer": "report any concerns immediately to your assigned scholar/mentor.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "conflict",
+      "scholar",
+      "mentor"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.13",
+    "question": "how will i know who my mentor is?",
+    "answer": "your mentor will be the scholar assigned to the project your team is working on.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "mentor",
+      "scholar",
+      "project"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.14",
+    "question": "when will i know my team details?",
+    "answer": "team details are announced in the announcements section on samagama.in.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "announcement",
+      "samagama",
+      "dashboard"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.15",
+    "question": "i received a team list email but my name is not included. what should i do?",
+    "answer": "team announcements are phased, so your name may appear in a later list.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "email",
+      "missing",
+      "list"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.16",
+    "question": "we selected project x as our top priority but were assigned project y. can we change it?",
+    "answer": "no. project assignments are final and cannot be changed.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "project",
+      "assignment",
+      "final"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.17",
+    "question": "i just started the internship. can i form my own team now?",
+    "answer": "no. for later cohorts, teams will be randomly assigned.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "late-start",
+      "random",
+      "assignment"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.18",
+    "question": "when do team activities begin?",
+    "answer": "team-based work begins in phase 2.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "phase-2",
+      "timeline",
+      "activities"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.19",
+    "question": "can i request a specific teammate after teams are assigned?",
+    "answer": "no. team assignments are final and requests for changes are not entertained.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "request",
+      "teammate",
+      "final"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.20",
+    "question": "what happens if a team member is inactive or not contributing?",
+    "answer": "you should report the issue to your mentor/scholar early.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "inactive",
+      "mentor",
+      "report"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.21",
+    "question": "can i switch teams if there are conflicts?",
+    "answer": "team switches are not allowed except in exceptional, admin-approved cases.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "switch",
+      "conflict",
+      "admin"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.22",
+    "question": "will team performance affect individual evaluation?",
+    "answer": "yes. team deliverables are a key part of evaluation.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "evaluation",
+      "individual",
+      "team-deliverable"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.23",
+    "question": "how will communication happen within teams?",
+    "answer": "teams self-organise over linkedin or email only. whatsapp groups are prohibited.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "communication",
+      "linkedin",
+      "whatsapp",
+      "prohibited"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.24",
+    "question": "what if i miss the team allocation announcement?",
+    "answer": "all programme updates are posted in the announcements section on samagama.in.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "announcement",
+      "missed",
+      "samagama"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.25",
+    "question": "can a team be dissolved and reformed?",
+    "answer": "no. once finalized, teams are locked and cannot be dissolved.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "dissolved",
+      "locked",
+      "final"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.26",
+    "question": "what happens if i drop out of the internship?",
+    "answer": "your team will be adjusted accordingly.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "dropout",
+      "three-members",
+      "replacement"
+    ],
+    "priority_score": 0
+  },
+  {
+    "id": "14.27",
+    "question": "will we get time to get to know our teammates before phase 2?",
+    "answer": "yes. there is typically a buffer period before phase 2 where teams can connect and prepare.",
+    "category": "teams",
+    "tags": [
+      "teams",
+      "phase-2",
+      "buffer",
+      "connect"
+    ],
+    "priority_score": 0
+  }
+]
