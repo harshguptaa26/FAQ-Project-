@@ -1,761 +1,1234 @@
-// ============================================================
-// APP LOGIC — wires mock data to the UI
-// ============================================================
-
+// State Variables
+let faqData = [];
+let suggestions = [];
+let currentTheme = 'dark';
+let currentView = 'student';
+let activeCategory = 'all';
+let searchQuery = '';
+let panicMode = false;
 let readSections = new Set();
-let currentSort = "urgency";
-let activeFilter = "all";
-let currentModalId = null;
+let chatbotHistory = [];
+let chatWindowOpen = false;
+let currentSubNav = 'faq';
+let voiceIssuesData = [];
 
-const URGENCY_COLOR = {
-  critical: "var(--critical)",
-  high: "var(--high)",
-  medium: "var(--medium)",
-  low: "var(--low)",
-};
-const URGENCY_COLOR_HEX = {
-  critical: "#d94f3d",
-  high: "#d4893a",
-  medium: "#2e6e84",
-  low: "#3d7a69",
-};
-
-// ---------------------------------------------------------------
-// THEME TOGGLE
-// ---------------------------------------------------------------
-const THEME_KEY = "faq-engine-theme";
-const themeToggleBtn = document.getElementById("themeToggle");
-
-function applyTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-  try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
-  if (themeToggleBtn) themeToggleBtn.setAttribute("aria-pressed", String(theme === "dark"));
-}
-
-if (themeToggleBtn) {
-  themeToggleBtn.setAttribute("aria-pressed", String(document.documentElement.getAttribute("data-theme") === "dark"));
-  themeToggleBtn.addEventListener("click", () => {
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    applyTheme(isDark ? "light" : "dark");
-  });
-}
-
-// ---------------------------------------------------------------
-// LIVE STATS TICKER
-// ---------------------------------------------------------------
-function animateCount(el, target, duration = 900) {
-  const start = parseInt(el.textContent) || 0;
-  const range = target - start;
-  const startTime = performance.now();
-  function step(now) {
-    const elapsed = now - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const ease = 1 - Math.pow(1 - progress, 3);
-    el.textContent = Math.round(start + range * ease);
-    if (progress < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-
-function updateTicker() {
-  const totalSearches = FAQS.reduce((s, f) => s + f.searchesThisWeek, 0);
-  const criticalCount = FAQS.filter(f => f.urgency === "critical").length;
-  const totalUp = FAQS.reduce((s, f) => s + f.thumbsUp, 0);
-  const totalDown = FAQS.reduce((s, f) => s + f.thumbsDown, 0);
-  const satisfaction = totalUp + totalDown > 0 ? Math.round(totalUp / (totalUp + totalDown) * 100) : 0;
-
-  animateCount(document.getElementById("tTotal"), FAQS.length, 800);
-  animateCount(document.getElementById("tSearches"), totalSearches, 1000);
-  animateCount(document.getElementById("tCritical"), criticalCount, 700);
-  animateCount(document.getElementById("tSatisfied"), satisfaction, 900);
-
-  // Duplicate ticker content for seamless scroll
-  const inner = document.querySelector(".ticker-inner");
-  if (inner && !inner.dataset.duplicated) {
-    inner.innerHTML += inner.innerHTML;
-    inner.dataset.duplicated = "true";
-  }
-}
-
-// ---------------------------------------------------------------
-// VIEW TOGGLE
-// ---------------------------------------------------------------
-document.querySelectorAll(".toggle-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".toggle-btn").forEach((b) => {
-      b.classList.remove("is-active");
-      b.setAttribute("aria-selected", "false");
-    });
-    btn.classList.add("is-active");
-    btn.setAttribute("aria-selected", "true");
-
-    const isStudent = btn.dataset.view === "student";
-    document.getElementById("studentView").hidden = !isStudent;
-    document.getElementById("adminView").hidden = isStudent;
-
-    if (!isStudent) renderAdmin();
-  });
-});
-
-// ---------------------------------------------------------------
-// SORTED FAQ LIST
-// ---------------------------------------------------------------
-function sortedFaqs() {
-  let list = [...FAQS];
-  if (activeFilter !== "all") list = list.filter((f) => f.category === activeFilter);
-  if (currentSort === "urgency") {
-    list.sort((a, b) => urgencyScore(b) - urgencyScore(a));
-  } else if (currentSort === "trending") {
-    list.sort((a, b) => b.searchesThisWeek - a.searchesThisWeek);
-  } else if (currentSort === "category") {
-    list.sort((a, b) => a.category.localeCompare(b.category));
-  }
-  return list;
-}
-
-function renderFaqList() {
-  const container = document.getElementById("faqList");
-  const list = sortedFaqs();
-  container.innerHTML = list
-    .map((f, i) => {
-      const cat = CATEGORIES[f.category];
-      const delay = Math.min(i * 0.038, 0.38);
-      const isRead = readSections.has(f.id);
-      return `
-      <article class="faq-card urgency-${f.urgency} fade-item${isRead ? " faq-read" : ""}" style="animation-delay:${delay}s" data-id="${f.id}" tabindex="0" role="button" aria-label="${f.question}">
-        <div class="faq-card-main">
-          <div class="faq-card-top">
-            <span class="faq-badge urgency-${f.urgency}">${f.urgency}</span>
-            <span class="faq-category-tag">${cat.label}</span>
-            ${isRead ? `<span style="font-size:10.5px;color:var(--low);font-family:var(--font-mono)">✓ read</span>` : ""}
-            ${f.pinned ? `<span class="faq-pin-note">📌 ${f.pinNote || "Pinned by admin"}</span>` : ""}
-          </div>
-          <p class="faq-question">${f.question}</p>
-        </div>
-        <div class="faq-card-stats">
-          <span><strong>${f.clicks}</strong> views</span>
-          <span><strong>${f.searchesThisWeek}</strong>/wk</span>
-        </div>
-      </article>`;
-    })
-    .join("");
-
-  container.querySelectorAll(".faq-card").forEach((card) => {
-    card.addEventListener("click", () => openModal(card.dataset.id));
-    card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(card.dataset.id); }
-    });
-  });
-}
-
-function renderCategoryFilters() {
-  const container = document.getElementById("categoryFilters");
-  container.innerHTML =
-    `<button class="filter-chip is-active" data-cat="all">All</button>` +
-    Object.keys(CATEGORIES).map((c) => `<button class="filter-chip" data-cat="${c}">${CATEGORIES[c].label}</button>`).join("");
-
-  container.querySelectorAll(".filter-chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      container.querySelectorAll(".filter-chip").forEach((c) => c.classList.remove("is-active"));
-      chip.classList.add("is-active");
-      activeFilter = chip.dataset.cat;
-      renderFaqList();
-    });
-  });
-}
-
-document.getElementById("sortSelect").addEventListener("change", (e) => {
-  currentSort = e.target.value;
-  renderFaqList();
-});
-
-// ---------------------------------------------------------------
-// LIVE SEARCH WITH INTENT DETECTION + DID YOU MEAN
-// ---------------------------------------------------------------
+// Intent patterns for Search Intent Detection
 const INTENT_PATTERNS = [
-  { re: /\bwhen\b/i, label: "Intent: timing" },
-  { re: /\bwho\b/i, label: "Intent: person/authority" },
-  { re: /\bhow\b/i, label: "Intent: procedure" },
-  { re: /\bwhat\b/i, label: "Intent: definition" },
-  { re: /\bcan i\b|\bcan we\b/i, label: "Intent: permission" },
-  { re: /\bwhy\b/i, label: "Intent: reasoning" },
+  { keyword: 'when', label: 'Timeline / Date' },
+  { keyword: 'date', label: 'Timeline / Date' },
+  { keyword: 'deadline', label: 'Timeline / Date' },
+  { keyword: 'how', label: 'Process / Guide' },
+  { keyword: 'register', label: 'Process / Guide' },
+  { keyword: 'request', label: 'Process / Guide' },
+  { keyword: 'who', label: 'Authority / Contact' },
+  { keyword: 'where', label: 'Location / Link' },
+  { keyword: 'link', label: 'Location / Link' },
+  { keyword: 'what', label: 'Information' },
+  { keyword: 'why', label: 'Reasoning' }
 ];
 
-function fuzzyScore(query, text) {
-  const q = query.toLowerCase().trim();
-  const t = text.toLowerCase();
-  if (!q) return 0;
-  if (t.includes(q)) return 100;
-  const qTokens = q.split(/\s+/).filter(Boolean);
-  let hits = 0;
-  qTokens.forEach((tok) => {
-    if (t.includes(tok)) hits++;
-    else {
-      for (let i = 0; i < t.length - tok.length + 1; i++) {
-        const seg = t.substr(i, tok.length);
-        if (levenshtein(seg, tok) <= 1 && tok.length > 3) { hits += 0.6; break; }
+// Typo fuzzy suggestions mapping
+const TYPO_MAP = {
+  'ncc': { correct: 'NOC', query: 'noc' },
+  'nod': { correct: 'NOC', query: 'noc' },
+  'intren': { correct: 'Internship', query: 'internship' },
+  'internshpi': { correct: 'Internship', query: 'internship' },
+  'vibe': { correct: 'ViBe', query: 'vibe' },
+  'viba': { correct: 'ViBe', query: 'vibe' },
+  'roseta': { correct: 'Rosetta', query: 'rosetta' },
+  'rosetea': { correct: 'Rosetta', query: 'rosetta' }
+};
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  initTheme();
+  setupEventListeners();
+  renderAll();
+  switchSubNav(currentSubNav);
+  
+  // Show initial bot greeting if history is empty
+  if (chatbotHistory.length === 0) {
+    addBotMessage("Greetings! I am **Yaksha Mini**, your AI FAQ assistant. Ask me anything about VINS onboarding, NOC dates, Spurti calculations, or ViBe logins!");
+    updateChatbotUnread(true);
+  } else {
+    renderChatHistory();
+  }
+});
+
+// Load state from localStorage or use initial presets
+function loadState() {
+  const savedFaq = localStorage.getItem('samagama_faq');
+  const savedSuggestions = localStorage.getItem('samagama_suggestions');
+  const savedTheme = localStorage.getItem('samagama_theme');
+  const savedView = localStorage.getItem('samagama_view');
+  const savedRead = localStorage.getItem('samagama_read');
+  const savedHistory = localStorage.getItem('samagama_chat_history');
+  const savedPanic = localStorage.getItem('samagama_panic');
+  const savedVoice = localStorage.getItem('samagama_voice_issues');
+
+  faqData = savedFaq ? JSON.parse(savedFaq) : [...INITIAL_FAQ_DATA];
+  suggestions = savedSuggestions ? JSON.parse(savedSuggestions) : [...INITIAL_SELF_HEALING_SUGGESTIONS];
+  currentTheme = savedTheme || 'dark';
+  currentView = savedView || 'student';
+  panicMode = savedPanic === 'true';
+  
+  if (savedRead) {
+    readSections = new Set(JSON.parse(savedRead));
+  } else {
+    readSections = new Set();
+  }
+
+  chatbotHistory = savedHistory ? JSON.parse(savedHistory) : [];
+  
+  voiceIssuesData = savedVoice ? JSON.parse(savedVoice) : [
+    { id: 'v-1', text: "Unable to submit Zoom session polls (Error 100035000)", upvotes: 142, category: 'vibe', upvoted: false },
+    { id: 'v-2', text: "Video loading issues on Vibe LMS platform", upvotes: 85, category: 'coursework', upvoted: false },
+    { id: 'v-3', text: "Delay in NOC verifications from local university placement cells", upvotes: 60, category: 'noc', upvoted: false },
+    { id: 'v-4', text: "Spurti Points not synchronizing after Git commits to private repos", upvotes: 32, category: 'spurti', upvoted: false }
+  ];
+
+  // Parse session and apply role-based configuration
+  const sessionStr = localStorage.getItem('samagama_session');
+  if (sessionStr) {
+    const session = JSON.parse(sessionStr);
+    const displayEmail = document.getElementById('user-display-email');
+    if (displayEmail) {
+      displayEmail.innerText = `${session.role.toUpperCase()}: ${session.email}`;
+      displayEmail.style.display = 'inline-block';
+    }
+    
+    if (session.role === 'student') {
+      currentView = 'student';
+      const adminBtn = document.getElementById('view-admin-btn');
+      if (adminBtn) {
+        adminBtn.style.display = 'none';
       }
     }
-  });
-  return (hits / qTokens.length) * 80;
-}
-
-function levenshtein(a, b) {
-  const m = a.length, n = b.length;
-  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-    }
   }
-  return dp[m][n];
 }
 
-function closestQuestion(query) {
-  let best = null, bestScore = -1;
-  FAQS.forEach((f) => {
-    const s = fuzzyScore(query, f.question);
-    if (s > bestScore) { bestScore = s; best = f; }
+// Save state to localStorage
+function saveState() {
+  localStorage.setItem('samagama_faq', JSON.stringify(faqData));
+  localStorage.setItem('samagama_suggestions', JSON.stringify(suggestions));
+  localStorage.setItem('samagama_theme', currentTheme);
+  localStorage.setItem('samagama_view', currentView);
+  localStorage.setItem('samagama_read', JSON.stringify([...readSections]));
+  localStorage.setItem('samagama_chat_history', JSON.stringify(chatbotHistory));
+  localStorage.setItem('samagama_panic', panicMode);
+  localStorage.setItem('samagama_voice_issues', JSON.stringify(voiceIssuesData));
+}
+
+// Initialize Theme UI
+function initTheme() {
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  updateThemeButtonIcon();
+}
+
+// Update Theme Toggle icon based on state
+function updateThemeButtonIcon() {
+  const themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn) {
+    themeBtn.innerHTML = currentTheme === 'dark' ? '☀️' : '🌙';
+  }
+}
+
+// Main Render Function
+function renderAll() {
+  renderPanicBanner();
+  renderFaqGrid();
+  renderCategorySidebar();
+  renderProgressStrip();
+  renderTrendingList();
+  renderAdminHeatmap();
+  renderDoubtClusterMap();
+  renderAdminSuggestions();
+  renderSimulationState();
+  updateViewToggleUI();
+}
+
+// Toggle View (Student / Admin)
+function toggleView(view) {
+  currentView = view;
+  saveState();
+  
+  const studentView = document.getElementById('student-view-container');
+  const adminView = document.getElementById('admin-view-container');
+  
+  if (view === 'student') {
+    studentView.style.display = 'block';
+    adminView.style.display = 'none';
+  } else {
+    studentView.style.display = 'none';
+    adminView.style.display = 'block';
+    // Re-render graphs since they were hidden
+    renderAdminHeatmap();
+    renderDoubtClusterMap();
+  }
+  updateViewToggleUI();
+}
+
+function updateViewToggleUI() {
+  document.getElementById('view-student-btn').classList.toggle('active', currentView === 'student');
+  document.getElementById('view-admin-btn').classList.toggle('active', currentView === 'admin');
+  
+  // Show / Hide the header action bar appropriately
+  const studentView = document.getElementById('student-view-container');
+  const adminView = document.getElementById('admin-view-container');
+  if (currentView === 'student') {
+    studentView.style.display = 'block';
+    adminView.style.display = 'none';
+  } else {
+    studentView.style.display = 'none';
+    adminView.style.display = 'block';
+  }
+}
+
+// Theme Toggle trigger
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  saveState();
+  updateThemeButtonIcon();
+  
+  // Redraw graphs in new theme colors if in admin view
+  if (currentView === 'admin') {
+    renderDoubtClusterMap();
+  }
+}
+
+// Render the Critical Panic Mode Banner if active
+function renderPanicBanner() {
+  const banner = document.getElementById('panic-banner');
+  if (panicMode) {
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// Dismiss Panic alert manually (turns off banner but doesn't resolve simulation state unless clicked)
+function dismissPanic() {
+  document.getElementById('panic-banner').style.display = 'none';
+}
+
+// Render category filtering sidebar
+function renderCategorySidebar() {
+  const sidebar = document.getElementById('category-sidebar');
+  if (!sidebar) return;
+  
+  const categories = [
+    { code: 'all', name: 'All Topics' },
+    { code: 'noc', name: 'NOC Section' },
+    { code: 'internship', name: 'Internship Allocation' },
+    { code: 'vibe', name: 'ViBe Viva-Voce' },
+    { code: 'rosetta', name: 'Rosetta Academy' }
+  ];
+  
+  let html = '';
+  categories.forEach(cat => {
+    // Count items matching
+    let count = 0;
+    if (cat.code === 'all') {
+      count = faqData.length;
+    } else {
+      count = faqData.filter(faq => faq.sectionCode === cat.code).length;
+    }
+    
+    const isActive = activeCategory === cat.code ? 'active' : '';
+    html += `
+      <button class="category-btn ${isActive}" onclick="setCategory('${cat.code}')">
+        <span>${cat.name}</span>
+        <span class="category-count">${count}</span>
+      </button>
+    `;
   });
-  return bestScore > 15 ? best : null;
+  
+  sidebar.innerHTML = html;
 }
 
-const searchInput = document.getElementById("searchInput");
-const intentChip = document.getElementById("intentChip");
-const didYouMean = document.getElementById("didYouMean");
-const searchResults = document.getElementById("searchResults");
-const searchClear = document.getElementById("searchClear");
+// Set Active Category filter
+function setCategory(catCode) {
+  activeCategory = catCode;
+  renderFaqGrid();
+  renderCategorySidebar();
+}
 
-searchInput.addEventListener("input", (e) => {
-  const q = e.target.value.trim();
-  searchClear.hidden = !q;
+// Compute urgency score for FAQs dynamically
+// In our engine, base score is affected by searches, views, and thumbsDown votes.
+function getComputedUrgency(faq) {
+  let score = faq.urgencyScore;
+  
+  // NOC gets a panic bump if panicMode is active
+  if (panicMode && faq.sectionCode === 'noc') {
+    score = Math.max(score, 98); // Force high critical urgency
+  }
+  
+  // Custom formula: Thumbs down significantly elevates urgency
+  const votePenalty = faq.thumbsDown * 15;
+  const searchWeight = Math.floor(faq.searches / 15);
+  
+  return Math.min(100, Math.max(0, score + votePenalty + searchWeight));
+}
 
-  if (!q) {
-    intentChip.hidden = true;
-    didYouMean.hidden = true;
-    searchResults.hidden = true;
+// Render the FAQ list based on filters
+function renderFaqGrid() {
+  const faqGrid = document.getElementById('faq-grid');
+  if (!faqGrid) return;
+  
+  // Filter by category
+  let list = faqData;
+  if (activeCategory !== 'all') {
+    list = faqData.filter(faq => faq.sectionCode === activeCategory);
+  }
+  
+  // Filter by search query
+  if (searchQuery.trim() !== '') {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(faq => 
+      faq.question.toLowerCase().includes(q) || 
+      faq.answer.toLowerCase().includes(q) || 
+      faq.section.toLowerCase().includes(q)
+    );
+  }
+  
+  // Sort by urgency descending
+  list.sort((a, b) => getComputedUrgency(b) - getComputedUrgency(a));
+  
+  if (list.length === 0) {
+    faqGrid.innerHTML = `
+      <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+        <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">🕵️ No results found</p>
+        <p style="font-size: 0.9rem;">Try matching key phrases like "NOC status" or "ViBe registration".</p>
+      </div>
+    `;
     return;
   }
-
-  const matchedIntent = INTENT_PATTERNS.find((p) => p.re.test(q));
-  if (matchedIntent) { intentChip.textContent = matchedIntent.label; intentChip.hidden = false; }
-  else { intentChip.hidden = true; }
-
-  const scored = FAQS.map((f) => ({ f, score: fuzzyScore(q, f.question) }))
-    .filter((x) => x.score > 12)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 6);
-
-  if (scored.length === 0) {
-    const close = closestQuestion(q);
-    if (close) {
-      didYouMean.hidden = false;
-      didYouMean.innerHTML = `Did you mean: <button data-id="${close.id}">${close.question}</button>?`;
-      didYouMean.querySelector("button").addEventListener("click", () => {
-        searchInput.value = close.question;
-        openModal(close.id);
-        searchResults.hidden = true;
-        didYouMean.hidden = true;
-      });
-    } else {
-      didYouMean.hidden = true;
+  
+  let html = '';
+  list.forEach(faq => {
+    const urgency = getComputedUrgency(faq);
+    let priorityClass = 'low';
+    let priorityLabel = 'Low Urgency';
+    
+    if (urgency >= 85) {
+      priorityClass = 'critical';
+      priorityLabel = 'Critical';
+    } else if (urgency >= 60) {
+      priorityClass = 'high';
+      priorityLabel = 'High Urgency';
+    } else if (urgency >= 30) {
+      priorityClass = 'medium';
+      priorityLabel = 'Medium Urgency';
     }
-    searchResults.hidden = false;
-    searchResults.innerHTML = `<div class="search-result-empty">No matching FAQs yet. This search is being logged to flag a content gap.</div>`;
-    return;
-  }
-
-  didYouMean.hidden = true;
-  searchResults.hidden = false;
-  searchResults.innerHTML = scored
-    .map(({ f }) => `
-      <button class="search-result-item" data-id="${f.id}">
-        <span class="urgency-dot" style="background:${URGENCY_COLOR_HEX[f.urgency]}"></span>
-        ${f.question}
-      </button>`)
-    .join("");
-
-  searchResults.querySelectorAll(".search-result-item").forEach((btn) => {
-    btn.addEventListener("click", () => { openModal(btn.dataset.id); searchResults.hidden = true; });
-  });
-});
-
-searchClear.addEventListener("click", () => {
-  searchInput.value = "";
-  searchClear.hidden = true;
-  intentChip.hidden = true;
-  didYouMean.hidden = true;
-  searchResults.hidden = true;
-  searchInput.focus();
-});
-
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".search-section")) searchResults.hidden = true;
-});
-
-// ---------------------------------------------------------------
-// TRENDING
-// ---------------------------------------------------------------
-function renderTrending() {
-  const top = [...FAQS].sort((a, b) => b.searchesThisWeek - a.searchesThisWeek).slice(0, 5);
-  const row = document.getElementById("trendingRow");
-  row.innerHTML = top
-    .map((f, i) => {
-      const up = f.searchesThisWeek - f.searchesLastWeek;
-      return `
-      <div class="trending-card fade-item" style="animation-delay:${i * 0.06}s" data-id="${f.id}">
-        <span class="trending-rank">${String(i + 1).padStart(2, "0")}</span>
-        <p class="trending-q">${f.question}</p>
-        <span class="trending-meta">${f.searchesThisWeek}/wk ${up > 0 ? `<span class="up">▲ +${up}</span>` : ""}</span>
-      </div>`;
-    })
-    .join("");
-
-  row.querySelectorAll(".trending-card").forEach((card) => {
-    card.addEventListener("click", () => openModal(card.dataset.id));
-  });
-}
-
-// ---------------------------------------------------------------
-// PROGRESS TRACKER
-// ---------------------------------------------------------------
-function renderProgress() {
-  const total = FAQS.length;
-  document.getElementById("progressTotal").textContent = total;
-  document.getElementById("progressDone").textContent = readSections.size;
-  const pct = total ? (readSections.size / total) * 100 : 0;
-  document.getElementById("progressFill").style.width = pct + "%";
-
-  // Dot indicators
-  const stepsEl = document.getElementById("progressSteps");
-  if (stepsEl) {
-    const ids = sortedFaqs().map(f => f.id);
-    stepsEl.innerHTML = ids.map(id =>
-      `<div class="progress-step-dot${readSections.has(id) ? " done" : ""}" title="${FAQS.find(f=>f.id===id)?.question}"></div>`
-    ).join("");
-  }
-
-  // Milestone message
-  const milestone = document.getElementById("progressMilestone");
-  if (milestone) {
-    if (readSections.size >= total && total > 0) {
-      milestone.textContent = "🎉 All done!";
-      milestone.hidden = false;
-    } else if (readSections.size >= Math.ceil(total / 2)) {
-      milestone.textContent = "⚡ Halfway there!";
-      milestone.hidden = false;
-    } else {
-      milestone.hidden = true;
-    }
-  }
-}
-
-// ---------------------------------------------------------------
-// RELATED QUESTIONS
-// ---------------------------------------------------------------
-function relatedQuestions(faq) {
-  return FAQS.filter((f) => f.id !== faq.id && f.category === faq.category)
-    .sort((a, b) => urgencyScore(b) - urgencyScore(a))
-    .slice(0, 4);
-}
-
-// ---------------------------------------------------------------
-// MODAL
-// ---------------------------------------------------------------
-function openModal(id) {
-  const faq = FAQS.find((f) => f.id === id);
-  if (!faq) return;
-  currentModalId = id;
-  readSections.add(id);
-  renderProgress();
-
-  document.getElementById("modalCategory").textContent = CATEGORIES[faq.category].label;
-  document.getElementById("modalQuestion").textContent = faq.question;
-  document.getElementById("modalAnswer").textContent = faq.answer;
-  document.getElementById("voteUpCount").textContent = faq.thumbsUp;
-  document.getElementById("voteDownCount").textContent = faq.thumbsDown;
-  document.getElementById("voteFeedback").textContent = "";
-  document.getElementById("voteUp").classList.remove("is-selected");
-  document.getElementById("voteDown").classList.remove("is-selected");
-
-  const related = relatedQuestions(faq);
-  document.getElementById("relatedList").innerHTML = related
-    .map((r) => `
-      <button class="related-item" data-id="${r.id}">
-        <span class="urgency-dot" style="background:${URGENCY_COLOR_HEX[r.urgency]}"></span>
-        ${r.question}
-      </button>`)
-    .join("") || `<span style="font-size:13px;color:var(--text-faint)">No related questions in this category yet.</span>`;
-
-  document.getElementById("relatedList").querySelectorAll(".related-item").forEach((btn) => {
-    btn.addEventListener("click", () => openModal(btn.dataset.id));
-  });
-
-  document.getElementById("modalBackdrop").hidden = false;
-  faq.clicks++;
-  renderFaqList();
-}
-
-function closeModal() {
-  document.getElementById("modalBackdrop").hidden = true;
-  currentModalId = null;
-}
-document.getElementById("modalClose").addEventListener("click", closeModal);
-document.getElementById("modalBackdrop").addEventListener("click", (e) => {
-  if (e.target.id === "modalBackdrop") closeModal();
-});
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeModal();
-});
-
-document.getElementById("voteUp").addEventListener("click", () => {
-  const faq = FAQS.find((f) => f.id === currentModalId);
-  if (!faq) return;
-  faq.thumbsUp++;
-  document.getElementById("voteUpCount").textContent = faq.thumbsUp;
-  document.getElementById("voteUp").classList.add("is-selected");
-  document.getElementById("voteDown").classList.remove("is-selected");
-  document.getElementById("voteFeedback").textContent = "Thanks — glad this helped.";
-  renderFaqList();
-  updateTicker();
-});
-
-document.getElementById("voteDown").addEventListener("click", () => {
-  const faq = FAQS.find((f) => f.id === currentModalId);
-  if (!faq) return;
-  faq.thumbsDown++;
-  document.getElementById("voteDownCount").textContent = faq.thumbsDown;
-  document.getElementById("voteDown").classList.add("is-selected");
-  document.getElementById("voteUp").classList.remove("is-selected");
-
-  const oldUrgency = faq.urgency;
-  if (faq.thumbsDown >= 25 && faq.urgency !== "critical") faq.urgency = "critical";
-  else if (faq.thumbsDown >= 12 && URGENCY_WEIGHT[faq.urgency] < URGENCY_WEIGHT.high) faq.urgency = "high";
-
-  document.getElementById("voteFeedback").textContent =
-    faq.urgency !== oldUrgency
-      ? `Logged. Urgency auto-escalated to "${faq.urgency}".`
-      : "Logged — this helps admins prioritize.";
-  renderFaqList();
-  updateTicker();
-});
-
-// ---------------------------------------------------------------
-// ADMIN: CONFUSION HEATMAP
-// ---------------------------------------------------------------
-function renderHeatmap() {
-  const table = document.getElementById("heatmapTable");
-  const cats = Object.keys(CATEGORIES)
-    .map((c) => ({ key: c, label: CATEGORIES[c].label, score: confusionScoreForCategory(c) }))
-    .sort((a, b) => b.score - a.score);
-  const max = Math.max(...cats.map((c) => c.score), 1);
-
-  table.innerHTML = cats
-    .map((c) => {
-      const pct = (c.score / max) * 100;
-      const color = c.score > 70 ? "var(--critical)" : c.score > 45 ? "var(--high)" : c.score > 25 ? "var(--medium)" : "var(--low)";
-      return `
-      <div class="heatmap-row">
-        <span class="heatmap-label">${c.label}</span>
-        <div class="heatmap-bar-track"><div class="heatmap-bar-fill" data-pct="${pct}" style="width:0%;background:${color}"></div></div>
-        <span class="heatmap-score" style="color:${color}">${c.score}</span>
-      </div>`;
-    })
-    .join("");
-
-  requestAnimationFrame(() => {
-    table.querySelectorAll(".heatmap-bar-fill").forEach((bar) => {
-      bar.style.width = bar.dataset.pct + "%";
-    });
-  });
-}
-
-// ---------------------------------------------------------------
-// ADMIN STAT CARDS
-// ---------------------------------------------------------------
-function renderAdminStats() {
-  const totalClicks = FAQS.reduce((s, f) => s + f.clicks, 0);
-  const criticalCount = FAQS.filter(f => f.urgency === "critical").length;
-  const totalUp = FAQS.reduce((s, f) => s + f.thumbsUp, 0);
-  const totalDown = FAQS.reduce((s, f) => s + f.thumbsDown, 0);
-  const satisfaction = totalUp + totalDown > 0 ? Math.round(totalUp / (totalUp + totalDown) * 100) + "%" : "—";
-  const spikeCount = FAQS.filter(f => f.searchesLastWeek > 0 && f.searchesThisWeek / f.searchesLastWeek >= 2).length;
-
-  const elC = document.getElementById("aStatClicks");
-  const elCr = document.getElementById("aStatCritical");
-  const elS = document.getElementById("aStatSatisfied");
-  const elSp = document.getElementById("aStatSpikes");
-
-  if (elC) animateCount(elC, totalClicks, 1000);
-  if (elCr) animateCount(elCr, criticalCount, 700);
-  if (elS) elS.textContent = satisfaction;
-  if (elSp) animateCount(elSp, spikeCount, 700);
-}
-
-// ---------------------------------------------------------------
-// BUBBLE CHART
-// ---------------------------------------------------------------
-function renderBubbleChart() {
-  const svg = document.getElementById("bubbleSvg");
-  const tooltip = document.getElementById("bubbleTooltip");
-  const cats = Object.keys(CATEGORIES);
-
-  const positions = {
-    noc: { x: 150, y: 150 },
-    dates: { x: 380, y: 100 },
-    vibe: { x: 600, y: 220 },
-    rosetta: { x: 250, y: 320 },
-    team: { x: 500, y: 340 },
-    certificate: { x: 680, y: 360 },
-  };
-
-  const bubbleData = cats.map((c) => {
-    const items = FAQS.filter((f) => f.category === c);
-    const totalDoubts = items.reduce((s, f) => s + f.clicks, 0);
-    const score = confusionScoreForCategory(c);
-    const color = score > 70 ? URGENCY_COLOR_HEX.critical : score > 45 ? URGENCY_COLOR_HEX.high : score > 25 ? URGENCY_COLOR_HEX.medium : URGENCY_COLOR_HEX.low;
-    return { key: c, label: CATEGORIES[c].label, totalDoubts, score, color, pos: positions[c] };
-  });
-
-  const maxDoubts = Math.max(...bubbleData.map((b) => b.totalDoubts), 1);
-  const minR = 34, maxR = 92;
-
-  let svgContent = "";
-  bubbleData.forEach((b) => {
-    const r = minR + (b.totalDoubts / maxDoubts) * (maxR - minR);
-    svgContent += `
-      <g class="bubble-node" data-key="${b.key}" data-label="${b.label}" data-doubts="${b.totalDoubts}" data-score="${b.score}" style="cursor:pointer">
-        <circle cx="${b.pos.x}" cy="${b.pos.y}" r="${r}" fill="${b.color}" opacity="0.78">
-          <animate attributeName="r" from="0" to="${r}" dur="0.65s" fill="freeze" />
-        </circle>
-        <circle cx="${b.pos.x}" cy="${b.pos.y}" r="${r}" fill="none" stroke="${b.color}" stroke-width="1.5" opacity="0.35" />
-        <text x="${b.pos.x}" y="${b.pos.y - 4}" text-anchor="middle" fill="#fff" font-family="Playfair Display, serif" font-weight="700" font-size="${Math.max(12, r / 5.5)}">${b.label}</text>
-        <text x="${b.pos.x}" y="${b.pos.y + 15}" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="DM Mono, monospace" font-size="${Math.max(10, r / 7)}">${b.totalDoubts} doubts</text>
-      </g>`;
-  });
-
-  svg.innerHTML = svgContent;
-
-  svg.querySelectorAll(".bubble-node").forEach((node) => {
-    node.addEventListener("mousemove", (e) => {
-      const stageRect = document.getElementById("bubbleStage").getBoundingClientRect();
-      tooltip.hidden = false;
-      tooltip.style.left = (e.clientX - stageRect.left) + "px";
-      tooltip.style.top = (e.clientY - stageRect.top) + "px";
-      tooltip.innerHTML = `<strong>${node.dataset.label}</strong>${node.dataset.doubts} doubts logged · confusion score ${node.dataset.score}`;
-    });
-    node.addEventListener("mouseleave", () => { tooltip.hidden = true; });
-    node.addEventListener("click", () => {
-      activeFilter = node.dataset.key;
-      document.querySelector('[data-view="student"]').click();
-      renderCategoryFilters();
-      document.querySelectorAll(".filter-chip").forEach((c) => {
-        c.classList.toggle("is-active", c.dataset.cat === node.dataset.key);
-      });
-      renderFaqList();
-    });
-  });
-}
-
-// ---------------------------------------------------------------
-// SELF-HEALING SUGGESTIONS
-// ---------------------------------------------------------------
-function renderSuggestions() {
-  const list = document.getElementById("suggestionList");
-  const cards = [];
-
-  FAQS.filter((f) => f.thumbsDown >= 20)
-    .sort((a, b) => b.thumbsDown - a.thumbsDown)
-    .slice(0, 3)
-    .forEach((f) => {
-      cards.push(`
-        <div class="suggestion-card">
-          <span class="suggestion-flag">⚠ ${f.thumbsDown} thumbs-down this week</span>
-          <p class="suggestion-body">"${f.question}" is failing students.</p>
-          <span class="suggestion-action">Suggested: Rewrite answer</span>
-        </div>`);
-    });
-
-  UNANSWERED_SEARCHES.slice(0, 3).forEach((u) => {
-    cards.push(`
-      <div class="suggestion-card">
-        <span class="suggestion-flag">⚠ ${u.count} searches, no match</span>
-        <p class="suggestion-body">Students searched "${u.query}" but no FAQ exists in ${CATEGORIES[u.category].label}.</p>
-        <span class="suggestion-action">Suggested: Create new FAQ</span>
-      </div>`);
-  });
-
-  list.innerHTML = cards.join("") || `<p style="font-size:13px;color:var(--text-faint)">No flags right now.</p>`;
-}
-
-// ---------------------------------------------------------------
-// UNRESOLVED CLUSTERS
-// ---------------------------------------------------------------
-function renderUnresolved() {
-  const list = document.getElementById("unresolvedList");
-  const unresolved = [...FAQS].sort((a, b) => b.thumbsDown - a.thumbsDown).slice(0, 5);
-
-  list.innerHTML = unresolved
-    .map((f) => `
-      <div class="unresolved-card">
-        <div>
-          <div class="unresolved-q">${f.question}</div>
-          <div class="unresolved-meta">${CATEGORIES[f.category].label} · ${f.thumbsUp} 👍 / ${f.thumbsDown} 👎</div>
+    
+    const readIndicator = readSections.has(faq.id) ? '✓ Read' : 'Unread';
+    
+    html += `
+      <div class="faq-card ${priorityClass}" onclick="openFaqPopup('${faq.id}')">
+        <div class="faq-card-content">
+          <div class="faq-card-meta">
+            <span class="faq-card-badge">${priorityLabel}</span>
+            <span>${faq.section}</span>
+            <span>•</span>
+            <span style="color: ${readSections.has(faq.id) ? 'var(--neon-green)' : 'var(--text-muted)'}">${readIndicator}</span>
+          </div>
+          <div class="faq-card-title">${faq.question}</div>
+          <div class="faq-card-meta" style="margin-top: 0.25rem;">
+            <span>👁 ${faq.views} views</span>
+            <span>👍 ${faq.thumbsUp}</span>
+            <span>👎 ${faq.thumbsDown}</span>
+          </div>
         </div>
-        <span class="unresolved-score">${urgencyScore(f)}</span>
-      </div>`)
-    .join("");
+        <div class="faq-card-arrow">➜</div>
+      </div>
+    `;
+  });
+  
+  faqGrid.innerHTML = html;
 }
 
-// ---------------------------------------------------------------
-// ADMIN URGENCY OVERRIDE
-// ---------------------------------------------------------------
-function renderOverrideSelect() {
-  const select = document.getElementById("overrideSelect");
-  select.innerHTML = FAQS.map((f) => `<option value="${f.id}">${f.question}</option>`).join("");
+// Render Progress Strip of student read stats
+function renderProgressStrip() {
+  const label = document.getElementById('progress-label');
+  const bar = document.getElementById('progress-bar-fill');
+  const percentLabel = document.getElementById('progress-percentage');
+  
+  if (!label || !bar || !percentLabel) return;
+  
+  const total = faqData.length;
+  const readCount = Array.from(readSections).filter(id => faqData.some(faq => faq.id === id)).length;
+  
+  const percent = total > 0 ? Math.round((readCount / total) * 100) : 0;
+  
+  label.innerText = `You've covered ${readCount} of ${total} FAQ sections`;
+  percentLabel.innerText = `${percent}% Completed`;
+  bar.style.width = `${percent}%`;
 }
 
-function renderPinned() {
-  const container = document.getElementById("overridePinned");
-  const pinned = FAQS.filter((f) => f.pinned);
-  container.innerHTML = pinned
-    .map((f) => `
-      <div class="pinned-card">
-        <span><strong>${f.question}</strong> — <span class="pinned-card-note">${f.pinNote}</span></span>
-        <button class="btn-primary" data-unpin="${f.id}" style="background:var(--text-faint);padding:5px 12px;font-size:11.5px;">Unpin</button>
-      </div>`)
-    .join("");
+// Render Trending This Week (top 5 by search count)
+function renderTrendingList() {
+  const container = document.getElementById('trending-list');
+  if (!container) return;
+  
+  // Sort copy by searches/views descending
+  const sorted = [...faqData].sort((a, b) => b.searches - a.searches).slice(0, 5);
+  
+  let html = '';
+  sorted.forEach((faq, index) => {
+    html += `
+      <div class="trending-item" onclick="openFaqPopup('${faq.id}')">
+        <div class="trending-number">${index + 1}</div>
+        <div class="trending-text">${faq.question}</div>
+        <div class="trending-badge">${faq.section}</div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
 
-  container.querySelectorAll("[data-unpin]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const f = FAQS.find((x) => x.id === btn.dataset.unpin);
-      if (f) { f.pinned = false; f.pinNote = ""; }
-      renderPinned();
-      renderFaqList();
+// Setup Event Listeners
+function setupEventListeners() {
+  // Search bar input parsing
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const val = e.target.value;
+      searchQuery = val;
+      
+      detectIntent(val);
+      checkTypoSuggestion(val);
+      renderFaqGrid();
     });
+  }
+
+  // Chat window open trigger
+  const chatBubble = document.getElementById('chatbot-bubble');
+  if (chatBubble) {
+    chatBubble.addEventListener('click', toggleChatbotWindow);
+  }
+
+  // Chat window close trigger
+  const chatClose = document.getElementById('chat-close');
+  if (chatClose) {
+    chatClose.addEventListener('click', toggleChatbotWindow);
+  }
+
+  // Chat input submit
+  const chatForm = document.getElementById('chat-input-form');
+  if (chatForm) {
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleChatSubmit();
+    });
+  }
+
+  // Close modal when clicking overlay
+  const modalOverlay = document.getElementById('modal-overlay');
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        closeFaqPopup();
+      }
+    });
+  }
+}
+
+// Intent Detection Parser
+function detectIntent(val) {
+  const badge = document.getElementById('intent-badge');
+  if (!badge) return;
+  
+  const cleanVal = val.toLowerCase().trim();
+  if (cleanVal.length < 3) {
+    badge.className = 'intent-badge';
+    return;
+  }
+  
+  let found = null;
+  for (let pattern of INTENT_PATTERNS) {
+    if (cleanVal.includes(pattern.keyword)) {
+      found = pattern.label;
+      break;
+    }
+  }
+  
+  if (found) {
+    badge.innerText = found;
+    badge.className = 'intent-badge visible';
+  } else {
+    badge.className = 'intent-badge';
+  }
+}
+
+// Typo checking logic
+function checkTypoSuggestion(val) {
+  const container = document.getElementById('did-you-mean-container');
+  const suggestionSpan = document.getElementById('did-you-mean-suggestion');
+  if (!container || !suggestionSpan) return;
+  
+  const words = val.toLowerCase().trim().split(/\s+/);
+  let match = null;
+  
+  for (let word of words) {
+    if (TYPO_MAP[word]) {
+      match = TYPO_MAP[word];
+      break;
+    }
+  }
+  
+  if (match) {
+    suggestionSpan.innerText = match.correct;
+    suggestionSpan.onclick = () => {
+      const searchInput = document.getElementById('search-input');
+      searchInput.value = match.query;
+      searchQuery = match.query;
+      detectIntent(match.query);
+      container.className = 'did-you-mean';
+      renderFaqGrid();
+    };
+    container.className = 'did-you-mean visible';
+  } else {
+    container.className = 'did-you-mean';
+  }
+}
+
+// Opens FAQ Detail Popup (Modals)
+function openFaqPopup(id) {
+  const faq = faqData.find(f => f.id === id);
+  if (!faq) return;
+  
+  // Track read progress & view stats
+  readSections.add(faq.id);
+  faq.views++;
+  saveState();
+  renderProgressStrip();
+  renderTrendingList();
+  renderFaqGrid();
+  
+  const overlay = document.getElementById('modal-overlay');
+  const title = document.getElementById('modal-title');
+  const body = document.getElementById('modal-body');
+  const categoryBadge = document.getElementById('modal-category-badge');
+  const votesUpSpan = document.getElementById('votes-up-count');
+  const votesDownSpan = document.getElementById('votes-down-count');
+  
+  categoryBadge.innerText = faq.section;
+  title.innerText = faq.question;
+  body.innerText = faq.answer;
+  
+  votesUpSpan.innerText = faq.thumbsUp;
+  votesDownSpan.innerText = faq.thumbsDown;
+  
+  // Setup voting button bindings
+  const upBtn = document.getElementById('vote-up-btn');
+  const downBtn = document.getElementById('vote-down-btn');
+  
+  upBtn.onclick = () => castVote(faq.id, 'up');
+  downBtn.onclick = () => castVote(faq.id, 'down');
+  
+  // Render recommendations inside popup
+  renderPopupRecommendations(faq);
+  
+  overlay.className = 'modal-overlay active';
+}
+
+// Close FAQ detail popup
+function closeFaqPopup() {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.className = 'modal-overlay';
+}
+
+// Render related recommendations inside popup ("Ask Before Asking" + "You May Also Need")
+function renderPopupRecommendations(faq) {
+  const container = document.getElementById('recommendations-container');
+  if (!container) return;
+  
+  let html = '';
+  
+  // Merge similarIds and nextDoubtIds, unique list
+  const recIds = Array.from(new Set([...(faq.similarIds || []), ...(faq.nextDoubtIds || [])])).slice(0, 3);
+  
+  if (recIds.length > 0) {
+    html += `<div class="recommendations-title">Ask Before Asking (Recommended next)</div>`;
+    recIds.forEach(rid => {
+      const ref = faqData.find(f => f.id === rid);
+      if (ref) {
+        html += `
+          <div class="recommendation-item" onclick="navigateFaqPopup('${ref.id}')">
+            ${ref.question}
+          </div>
+        `;
+      }
+    });
+  } else {
+    html = `<div style="font-size: 0.85rem; color: var(--text-muted);">No further suggestions.</div>`;
+  }
+  
+  container.innerHTML = html;
+}
+
+// Navigate FAQ detail content within the open popup itself
+function navigateFaqPopup(id) {
+  // First update contents in view
+  const faq = faqData.find(f => f.id === id);
+  if (!faq) return;
+  
+  // Track state
+  readSections.add(faq.id);
+  faq.views++;
+  saveState();
+  renderProgressStrip();
+  renderTrendingList();
+  renderFaqGrid();
+  
+  const title = document.getElementById('modal-title');
+  const body = document.getElementById('modal-body');
+  const categoryBadge = document.getElementById('modal-category-badge');
+  const votesUpSpan = document.getElementById('votes-up-count');
+  const votesDownSpan = document.getElementById('votes-down-count');
+  
+  categoryBadge.innerText = faq.section;
+  title.innerText = faq.question;
+  body.innerText = faq.answer;
+  
+  votesUpSpan.innerText = faq.thumbsUp;
+  votesDownSpan.innerText = faq.thumbsDown;
+  
+  const upBtn = document.getElementById('vote-up-btn');
+  const downBtn = document.getElementById('vote-down-btn');
+  upBtn.onclick = () => castVote(faq.id, 'up');
+  downBtn.onclick = () => castVote(faq.id, 'down');
+  
+  renderPopupRecommendations(faq);
+  
+  // Scroll modal content back to top smoothly
+  document.getElementById('modal-content').scrollTop = 0;
+}
+
+// Handle Thumbs up/down feedback micro-voting
+function castVote(faqId, direction) {
+  const faq = faqData.find(f => f.id === faqId);
+  if (!faq) return;
+  
+  if (direction === 'up') {
+    faq.thumbsUp++;
+  } else {
+    faq.thumbsDown++;
+    // Notify or increment urgency immediately
+    faq.urgencyScore = Math.min(100, faq.urgencyScore + 5);
+  }
+  
+  saveState();
+  
+  // Update popup numbers in view
+  document.getElementById('votes-up-count').innerText = faq.thumbsUp;
+  document.getElementById('votes-down-count').innerText = faq.thumbsDown;
+  
+  // Notify with minor inline badge animations
+  const vbtn = document.getElementById(`vote-${direction}-btn`);
+  vbtn.style.transform = 'scale(1.2)';
+  setTimeout(() => { vbtn.style.transform = 'none'; }, 200);
+  
+  // Re-render student views & admin metrics
+  renderFaqGrid();
+  renderAdminHeatmap();
+  renderDoubtClusterMap();
+}
+
+// Render Admin Confusion Heatmap (Dials & Bar Gauges)
+function renderAdminHeatmap() {
+  const container = document.getElementById('heatmap-gauges');
+  if (!container) return;
+  
+  const sections = [
+    { name: 'NOC', code: 'noc', color: 'var(--neon-red)' },
+    { name: 'Internship', code: 'internship', color: 'var(--neon-orange)' },
+    { name: 'ViBe Viva', code: 'vibe', color: 'var(--neon-yellow)' },
+    { name: 'Rosetta Labs', code: 'rosetta', color: 'var(--neon-green)' }
+  ];
+  
+  let html = '';
+  
+  sections.forEach(sec => {
+    // Calculate Confusion Score:
+    // Formula = weighted average of urgency, searches, and thumbsDown votes of the section's questions.
+    const faqs = faqData.filter(f => f.sectionCode === sec.code);
+    let totalScore = 0;
+    
+    if (faqs.length > 0) {
+      faqs.forEach(f => {
+        const computed = getComputedUrgency(f);
+        totalScore += computed;
+      });
+      totalScore = Math.round(totalScore / faqs.length);
+    }
+    
+    // Hard code spike values if panicMode is active for visual feedback
+    if (panicMode && sec.code === 'noc') {
+      totalScore = 95;
+    }
+    
+    html += `
+      <div class="gauge-item">
+        <div class="gauge-labels">
+          <span class="gauge-section">${sec.name}</span>
+          <span class="gauge-score" style="color: ${sec.color}">${totalScore}% Confusion</span>
+        </div>
+        <div class="gauge-bar-bg">
+          <div class="gauge-bar-fill" style="width: ${totalScore}%; background-color: ${sec.color}"></div>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+// Generate the interactive SVG Bubble Chart (Doubt Cluster Map)
+function renderDoubtClusterMap() {
+  const wrapper = document.getElementById('bubble-chart-container');
+  if (!wrapper) return;
+  
+  // Calculate aggregate doubts for each section
+  // Size = number of doubts (views/15 + searches/5 + thumbsDown*3)
+  // Color = urgency (based on max urgency in category)
+  // NOC, Internship, ViBe, Rosetta coordinates:
+  const sectionLayout = [
+    { code: 'noc', name: 'NOC', cx: 120, cy: 130, colorVar: '--neon-red' },
+    { code: 'internship', name: 'Internship', cx: 280, cy: 180, colorVar: '--neon-orange' },
+    { code: 'vibe', name: 'ViBe', cx: 220, cy: 70, colorVar: '--neon-yellow' },
+    { code: 'rosetta', name: 'Rosetta', cx: 410, cy: 110, colorVar: '--neon-green' }
+  ];
+  
+  let svgContent = `<svg width="100%" height="100%" viewBox="0 0 520 280" style="background: transparent;">`;
+  
+  sectionLayout.forEach(sec => {
+    const faqs = faqData.filter(f => f.sectionCode === sec.code);
+    
+    let totalDoubts = 0;
+    let maxUrgency = 0;
+    
+    faqs.forEach(f => {
+      const urg = getComputedUrgency(f);
+      if (urg > maxUrgency) maxUrgency = urg;
+      
+      // Compute doubts signal
+      totalDoubts += (f.thumbsDown * 8) + (f.searches / 4) + (f.views / 20);
+    });
+    
+    if (panicMode && sec.code === 'noc') {
+      totalDoubts = Math.max(totalDoubts, 280);
+      maxUrgency = 98;
+    }
+    
+    // Scale radius: range between 25 and 70
+    let radius = 25 + Math.min(50, totalDoubts / 3);
+    
+    // Colors based on theme and urgency
+    let fillGlow = 'rgba(0, 243, 255, 0.4)';
+    if (maxUrgency >= 85) fillGlow = 'rgba(255, 49, 49, 0.4)';
+    else if (maxUrgency >= 60) fillGlow = 'rgba(255, 108, 0, 0.4)';
+    else if (maxUrgency >= 30) fillGlow = 'rgba(255, 230, 0, 0.4)';
+    else fillGlow = 'rgba(57, 255, 20, 0.4)';
+    
+    const neonColor = getComputedStyle(document.documentElement).getPropertyValue(sec.colorVar).trim();
+    
+    svgContent += `
+      <g class="bubble-node" transform="translate(0, 0)" 
+         onmouseenter="showBubbleTooltip(event, '${sec.name}', ${Math.round(totalDoubts)}, ${Math.round(maxUrgency)})"
+         onmouseleave="hideBubbleTooltip()"
+         onclick="setCategory('${sec.code}'); toggleView('student');">
+        <circle cx="${sec.cx}" cy="${sec.cy}" r="${radius}" 
+                fill="${neonColor}15" 
+                stroke="${neonColor}" 
+                stroke-width="2.5" 
+                style="filter: drop-shadow(0 0 8px ${neonColor}); transition: r 0.3s ease;"></circle>
+        <text x="${sec.cx}" y="${sec.cy}" class="bubble-text" style="font-size: ${Math.max(10, radius/3.5)}px">${sec.name}</text>
+      </g>
+    `;
+  });
+  
+  svgContent += `</svg>`;
+  
+  wrapper.innerHTML = svgContent + `<div id="bubble-tooltip" class="bubble-tooltip"></div>`;
+}
+
+// Tooltip helpers for SVG chart
+window.showBubbleTooltip = function(event, name, doubts, urgency) {
+  const tooltip = document.getElementById('bubble-tooltip');
+  if (!tooltip) return;
+  
+  tooltip.innerHTML = `
+    <strong>${name} Category</strong><br/>
+    Doubt Signals: ${doubts}<br/>
+    Peak Urgency: ${urgency}%
+  `;
+  
+  tooltip.style.opacity = '1';
+  
+  // Position tooltip relative to container wrapper bounds
+  const wrapper = document.getElementById('bubble-chart-container');
+  const rect = wrapper.getBoundingClientRect();
+  
+  // Calculate relative coordinates
+  const x = event.clientX - rect.left + 15;
+  const y = event.clientY - rect.top + 15;
+  
+  tooltip.style.left = `${x}px`;
+  tooltip.style.top = `${y}px`;
+};
+
+window.hideBubbleTooltip = function() {
+  const tooltip = document.getElementById('bubble-tooltip');
+  if (tooltip) {
+    tooltip.style.opacity = '0';
+  }
+};
+
+// Render Self-Healing suggestions on Admin Dashboard
+function renderAdminSuggestions() {
+  const container = document.getElementById('admin-suggestions-list');
+  if (!container) return;
+  
+  let html = '';
+  
+  suggestions.forEach(sug => {
+    const isCompleted = sug.completed;
+    const completedClass = isCompleted ? 'completed' : '';
+    
+    html += `
+      <div class="suggestion-card ${completedClass}">
+        <div class="suggestion-type">${sug.type.replace('-', ' ')}</div>
+        <div class="suggestion-desc">${sug.details}</div>
+        <div class="suggestion-action-box">
+          <div class="suggestion-action-text">Action: ${sug.action}</div>
+          <button class="suggestion-btn" onclick="applySelfHealing('${sug.id}')" ${isCompleted ? 'disabled' : ''}>
+            ${isCompleted ? 'Applied' : 'Resolve'}
+          </button>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+// Execute simulated action from self-healing panel
+function applySelfHealing(id) {
+  const sug = suggestions.find(s => s.id === id);
+  if (!sug || sug.completed) return;
+  
+  sug.completed = true;
+  
+  if (sug.type === 'low-rating') {
+    // Rewrite answer action: reduce thumbsDown to reset tension, update answer text
+    const faq = faqData.find(f => f.id === sug.targetId);
+    if (faq) {
+      faq.thumbsDown = 0;
+      faq.answer += " [Answer updated with detailed Dean Office instructions].";
+    }
+  } else if (sug.type === 'missing-faq') {
+    // Add the new missing FAQ card to the database
+    const payload = sug.suggestionPayload;
+    const exists = faqData.some(f => f.id === 'cgpa-exemption');
+    if (!exists) {
+      faqData.push({
+        id: "cgpa-exemption",
+        section: payload.section,
+        sectionCode: payload.sectionCode,
+        question: payload.question,
+        answer: payload.answer,
+        urgencyScore: 40,
+        thumbsUp: 10,
+        thumbsDown: 0,
+        views: 41,
+        searches: 41,
+        similarIds: ["intern-register", "intern-timeline"],
+        nextDoubtIds: ["intern-register"]
+      });
+    }
+  } else if (sug.type === 'panic-prevention') {
+    // Modify priority of specific target
+    const faq = faqData.find(f => f.id === sug.targetId);
+    if (faq) {
+      faq.urgencyScore = 88;
+    }
+  }
+  
+  saveState();
+  renderAll();
+}
+
+// Render Simulation State Buttons on Admin
+function renderSimulationState() {
+  const panicBtn = document.getElementById('sim-panic-btn');
+  if (!panicBtn) return;
+  
+  panicBtn.className = panicMode ? 'sim-btn panic-active' : 'sim-btn';
+  panicBtn.innerHTML = `
+    <span>Simulate NOC Search Spike (${panicMode ? '250' : '20'} reqs)</span>
+    <span class="sim-indicator"></span>
+  `;
+}
+
+// Trigger simulated NOC Search Spike (Panic Mode)
+function toggleSimulatedPanic() {
+  panicMode = !panicMode;
+  
+  if (panicMode) {
+    // Spike search stats of NOC questions
+    faqData.forEach(f => {
+      if (f.sectionCode === 'noc') {
+        f.searches += 200;
+        f.views += 100;
+      }
+    });
+  } else {
+    // Reset search spike counts slightly
+    faqData.forEach(f => {
+      if (f.sectionCode === 'noc') {
+        f.searches = Math.max(10, f.searches - 200);
+      }
+    });
+  }
+  
+  saveState();
+  renderAll();
+}
+
+// --- AI Chatbot Yaksha Mini logic ---
+
+// Toggle chatbot drawer visible state
+function toggleChatbotWindow() {
+  chatWindowOpen = !chatWindowOpen;
+  const chatWindow = document.getElementById('chat-window');
+  chatWindow.classList.toggle('active', chatWindowOpen);
+  
+  if (chatWindowOpen) {
+    updateChatbotUnread(false);
+    // Focus chatbot field
+    setTimeout(() => {
+      document.getElementById('chat-input-field').focus();
+    }, 300);
+  }
+}
+
+// Unread notification glow control
+function updateChatbotUnread(hasUnread) {
+  const unreadDot = document.getElementById('chatbot-badge-unread');
+  if (unreadDot) {
+    unreadDot.style.display = hasUnread ? 'block' : 'none';
+  }
+}
+
+// Add user dialogue message bubbles
+function addUserMessage(text) {
+  chatbotHistory.push({ sender: 'user', text: text });
+  saveState();
+  renderChatHistory();
+}
+
+// Add bot dialogue response bubbles
+function addBotMessage(text) {
+  chatbotHistory.push({ sender: 'bot', text: text });
+  saveState();
+  renderChatHistory();
+}
+
+// Render the chatbot conversation stream
+function renderChatHistory() {
+  const feed = document.getElementById('chat-messages');
+  if (!feed) return;
+  
+  let html = '';
+  chatbotHistory.forEach(msg => {
+    // Simple markdown link conversion for text links e.g. [text](link) or formatting
+    let formattedText = msg.text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br/>');
+      
+    html += `
+      <div class="chat-bubble-msg ${msg.sender}">
+        ${formattedText}
+      </div>
+    `;
+  });
+  
+  feed.innerHTML = html;
+  // Scroll to bottom
+  feed.scrollTop = feed.scrollHeight;
+}
+
+// Handle manual input submits
+function handleChatSubmit() {
+  const input = document.getElementById('chat-input-field');
+  if (!input) return;
+  
+  const text = input.value.trim();
+  if (text === '') return;
+  
+  input.value = '';
+  
+  // Add to stream
+  addUserMessage(text);
+  
+  // Simulate AI typing delay
+  setTimeout(() => {
+    processChatResponse(text);
+  }, 600);
+}
+
+// Dialog intelligence engine (Keyword & Intent matcher + suggestions)
+function processChatResponse(text) {
+  const query = text.toLowerCase();
+  let response = '';
+  
+  // Search state database first for exact matching titles
+  let faqMatch = faqData.find(f => f.question.toLowerCase().includes(query) || query.includes(f.question.toLowerCase()));
+  
+  if (faqMatch) {
+    response = `Here is what I found for **"${faqMatch.question}"**:\n\n${faqMatch.answer.slice(0, 180)}...\n\nWould you like me to open the full FAQ card details for you?`;
+    addBotMessage(response);
+    renderChatChips([
+      { text: `Open "${faqMatch.section}" FAQ`, action: () => { openFaqPopup(faqMatch.id); toggleChatbotWindow(); } },
+      { text: "Ask something else", action: () => sendPremadeQuery("Hello") }
+    ]);
+    return;
+  }
+  
+  // Try mapping preset keywords
+  let presetFound = null;
+  for (let pr of YAKSHA_CHAT_PRESETS) {
+    const match = pr.keywords.some(kw => query.includes(kw));
+    if (match) {
+      presetFound = pr;
+      break;
+    }
+  }
+  
+  if (presetFound) {
+    addBotMessage(presetFound.reply);
+    
+    // Provide relevant suggestions based on topic
+    if (query.includes('noc')) {
+      renderChatChips([
+        { text: "NOC requirements", action: () => sendPremadeQuery("What are NOC requirements?") },
+        { text: "NOC dates", action: () => sendPremadeQuery("When open NOC dates?") },
+        { text: "Show NOC list", action: () => { setCategory('noc'); toggleChatbotWindow(); } }
+      ]);
+    } else if (query.includes('intern')) {
+      renderChatChips([
+        { text: "Timeline & Dates", action: () => sendPremadeQuery("Internship dates timeline") },
+        { text: "External internship?", action: () => sendPremadeQuery("Can I do external internship?") }
+      ]);
+    } else if (query.includes('vibe')) {
+      renderChatChips([
+        { text: "Viva guidelines", action: () => sendPremadeQuery("Viva guidelines pattern") },
+        { text: "ViBe link", action: () => sendPremadeQuery("ViBe registration link") }
+      ]);
+    } else if (query.includes('rosetta')) {
+      renderChatChips([
+        { text: "Request Access", action: () => sendPremadeQuery("Request Rosetta Access") },
+        { text: "Troubleshoot login", action: () => sendPremadeQuery("Rosetta login issues") }
+      ]);
+    } else {
+      showDefaultChips();
+    }
+  } else {
+    // Default fallback response
+    response = "I couldn't find an exact answer for that query. I have logged this for our admin team as a missing search query. In the meantime, try asking about 'NOC dates', 'Internship registration', or 'ViBe portal'.";
+    addBotMessage(response);
+    
+    // Save to suggestions if no close result (simulating self-healing loop!)
+    logMissingQueryAdmin(text);
+    
+    showDefaultChips();
+  }
+}
+
+// Log missing queries into admin self-healing recommendations dynamically!
+function logMissingQueryAdmin(text) {
+  // Check if suggestion already exists
+  const existing = suggestions.some(s => s.details.includes(text));
+  if (existing || text.length < 5) return;
+  
+  suggestions.unshift({
+    id: `sh-${Date.now()}`,
+    type: 'missing-faq',
+    details: `Multiple students searched for "${text}" but no direct FAQ exists.`,
+    action: `Create a new FAQ matching query: "${text}"`,
+    suggestionPayload: {
+      section: "NOC",
+      sectionCode: "noc",
+      question: `Guidelines for ${text}`,
+      answer: `This FAQ has been generated automatically to address the query: "${text}". Standard guidelines follow the departmental regulatory committee standards. Please contact student counseling for case-specific queries.`
+    },
+    completed: false
+  });
+  
+  saveState();
+  if (currentView === 'admin') {
+    renderAdminSuggestions();
+  }
+}
+
+// Chat action chips rendering
+function renderChatChips(chips) {
+  const chipsContainer = document.getElementById('chat-chips');
+  if (!chipsContainer) return;
+  
+  let html = '';
+  chips.forEach((ch, idx) => {
+    html += `<button class="chat-chip" id="chat-chip-${idx}">${ch.text}</button>`;
+  });
+  
+  chipsContainer.innerHTML = html;
+  
+  // Attach functions
+  chips.forEach((ch, idx) => {
+    document.getElementById(`chat-chip-${idx}`).onclick = ch.action;
   });
 }
 
-document.getElementById("overrideApply").addEventListener("click", () => {
-  const id = document.getElementById("overrideSelect").value;
-  const note = document.getElementById("overrideNote").value.trim() || "Updated policy — read before applying";
-  const f = FAQS.find((x) => x.id === id);
-  if (f) { f.pinned = true; f.pinNote = note; f.urgency = "critical"; }
-  document.getElementById("overrideNote").value = "";
-  renderPinned();
-  renderFaqList();
-  renderHeatmap();
-});
-
-// ---------------------------------------------------------------
-// PANIC MODE
-// ---------------------------------------------------------------
-function checkPanicMode() {
-  const spike = FAQS.find((f) => f.searchesLastWeek > 0 && f.searchesThisWeek / f.searchesLastWeek >= 4);
-  if (spike) document.getElementById("panicBanner").hidden = false;
-}
-document.getElementById("panicDismiss").addEventListener("click", () => {
-  document.getElementById("panicBanner").hidden = true;
-});
-
-// ---------------------------------------------------------------
-// YAKSHA-MINI
-// ---------------------------------------------------------------
-const yakshaLauncher = document.getElementById("yakshaLauncher");
-const yakshaPanel = document.getElementById("yakshaPanel");
-const yakshaClose = document.getElementById("yakshaClose");
-const yakshaMessages = document.getElementById("yakshaMessages");
-const yakshaInput = document.getElementById("yakshaInput");
-const yakshaSend = document.getElementById("yakshaSend");
-const yakshaPing = document.getElementById("yakshaPing");
-
-function openYaksha() {
-  yakshaPanel.hidden = false;
-  yakshaLauncher.hidden = true;
-  if (yakshaPing) yakshaPing.hidden = true;
-  yakshaInput.focus();
-}
-function closeYaksha() {
-  yakshaPanel.hidden = true;
-  yakshaLauncher.hidden = false;
-}
-yakshaLauncher.addEventListener("click", openYaksha);
-yakshaClose.addEventListener("click", closeYaksha);
-
-function yakshaAppend(role, html) {
-  const empty = yakshaMessages.querySelector(".yaksha-empty");
-  if (empty) empty.remove();
-  const row = document.createElement("div");
-  row.className = `yaksha-msg ${role}`;
-  row.innerHTML = `<div class="yaksha-msg-bubble">${html}</div>`;
-  yakshaMessages.appendChild(row);
-  yakshaMessages.scrollTop = yakshaMessages.scrollHeight;
-  return row;
+function showDefaultChips() {
+  renderChatChips([
+    { text: "📅 Dates & Deadlines", action: () => sendPremadeQuery("Show dates deadlines") },
+    { text: "📋 NOC requirements", action: () => sendPremadeQuery("NOC document requirements") },
+    { text: "🎙️ ViBe Guide", action: () => sendPremadeQuery("Viva guidelines pattern") }
+  ]);
 }
 
-function yakshaTyping() {
-  const row = document.createElement("div");
-  row.className = "yaksha-msg bot";
-  row.innerHTML = `<div class="yaksha-msg-bubble"><div class="yaksha-typing"><span></span><span></span><span></span></div></div>`;
-  yakshaMessages.appendChild(row);
-  yakshaMessages.scrollTop = yakshaMessages.scrollHeight;
-  return row;
-}
-
-function yakshaAnswer(query) {
-  const scored = FAQS.map((f) => ({ f, score: fuzzyScore(query, f.question) })).sort((a, b) => b.score - a.score);
-  const best = scored[0];
-  const typingRow = yakshaTyping();
-
+// Send pre-made queries from recommendation chips
+function sendPremadeQuery(text) {
+  addUserMessage(text);
   setTimeout(() => {
-    typingRow.remove();
-    if (!best || best.score < 15) {
-      yakshaAppend("bot", `I couldn't find that in the FAQ yet — this looks like a content gap, and I've logged it for the admins. Try rephrasing, or log in at <a href="https://samagama.in" target="_blank" rel="noopener" style="color:var(--gold);font-weight:600">samagama.in</a> to ask the full Yaksha.`);
-      return;
+    processChatResponse(text);
+  }, 600);
+}
+
+// Log out user, clear session storage, and redirect
+function handleLogout() {
+  localStorage.removeItem('samagama_session');
+  window.location.href = 'login.html';
+}
+
+// Switch between sub-nav panels (Overview, FAQ, Voice)
+function switchSubNav(panelId) {
+  currentSubNav = panelId;
+  
+  // Hide all panels
+  document.getElementById('panel-overview').style.display = 'none';
+  document.getElementById('panel-faq').style.display = 'none';
+  document.getElementById('panel-voice').style.display = 'none';
+  
+  // Show active panel
+  document.getElementById(`panel-${panelId}`).style.display = 'block';
+  
+  // Toggle tab states
+  document.getElementById('sub-nav-overview').classList.toggle('active', panelId === 'overview');
+  document.getElementById('sub-nav-faq').classList.toggle('active', panelId === 'faq');
+  document.getElementById('sub-nav-voice').classList.toggle('active', panelId === 'voice');
+  
+  // Perform page renders if relevant
+  if (panelId === 'voice') {
+    renderVoiceBoard();
+  }
+}
+
+// Render student voice issues board
+function renderVoiceBoard() {
+  const container = document.getElementById('voice-issues-list');
+  if (!container) return;
+  
+  // Sort by upvotes descending
+  const list = [...voiceIssuesData].sort((a, b) => b.upvotes - a.upvotes);
+  
+  let html = '';
+  list.forEach(issue => {
+    html += `
+      <div class="voice-issue-item">
+        <div class="voice-issue-content">
+          <span class="voice-issue-tag">#${issue.category}</span>
+          <span class="voice-issue-desc">${issue.text}</span>
+        </div>
+        <div class="voice-issue-action">
+          <span class="voice-issue-upvotes">${issue.upvotes} votes</span>
+          <button class="btn-voice-upvote" onclick="upvoteVoiceIssue('${issue.id}')" ${issue.upvoted ? 'disabled style="opacity:0.6; cursor:not-allowed;"' : ''}>
+            <span>${issue.upvoted ? 'Upvoted' : 'Upvote'}</span>
+            <span>👍</span>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+// Upvote a student concern issue
+function upvoteVoiceIssue(id) {
+  const issue = voiceIssuesData.find(i => i.id === id);
+  if (!issue || issue.upvoted) return;
+  
+  issue.upvotes++;
+  issue.upvoted = true;
+  saveState();
+  renderVoiceBoard();
+  
+  // Add to admin self-healing recommendations dynamically if upvotes cross a threshold!
+  if (issue.upvotes >= 100) {
+    const existing = suggestions.some(s => s.details.includes(issue.text));
+    if (!existing) {
+      suggestions.unshift({
+        id: `sh-voice-${Date.now()}`,
+        type: 'low-rating',
+        details: `Community issue "${issue.text}" has crossed 100 upvotes!`,
+        action: `Contact engineering to resolve "${issue.category}" and update related FAQs.`,
+        completed: false
+      });
+      saveState();
+      if (currentView === 'admin') {
+        renderAdminSuggestions();
+      }
     }
-    const cat = CATEGORIES[best.f.category];
-    const bubble = yakshaAppend("bot", `${best.f.answer}<button class="yaksha-msg-source" data-id="${best.f.id}">↳ View full answer in ${cat.label}</button>`);
-    bubble.querySelector(".yaksha-msg-source").addEventListener("click", () => {
-      closeYaksha();
-      document.querySelector('[data-view="student"]').click();
-      openModal(best.f.id);
-    });
-  }, 550 + Math.random() * 350);
+  }
 }
 
-function yakshaSubmit() {
-  const q = yakshaInput.value.trim();
-  if (!q) return;
-  yakshaAppend("user", q);
-  yakshaInput.value = "";
-  yakshaAnswer(q);
+// Handle voice concern form submits
+function handleVoiceSubmit(event) {
+  event.preventDefault();
+  const textVal = document.getElementById('voice-issue-text').value.trim();
+  const catVal = document.getElementById('voice-category').value;
+  
+  if (textVal === '') return;
+  
+  // Push concern
+  const newIssue = {
+    id: `v-${Date.now()}`,
+    text: textVal,
+    upvotes: 1,
+    category: catVal,
+    upvoted: true
+  };
+  
+  voiceIssuesData.push(newIssue);
+  saveState();
+  
+  // Clear input
+  document.getElementById('voice-issue-text').value = '';
+  
+  // Re-render Voice Board
+  renderVoiceBoard();
+  
+  // Minor toast notification logic simulation
+  const formCard = document.querySelector('.voice-form-card');
+  const alertToast = document.createElement('div');
+  alertToast.innerText = "Concern posted successfully to board!";
+  alertToast.style.cssText = "margin-top: 1rem; color: var(--neon-green); font-family: var(--font-mono); font-size: 0.8rem; text-align: center; animation: slide-message 0.3s ease;";
+  formCard.appendChild(alertToast);
+  setTimeout(() => { alertToast.remove(); }, 3000);
 }
-yakshaSend.addEventListener("click", yakshaSubmit);
-yakshaInput.addEventListener("keydown", (e) => { if (e.key === "Enter") yakshaSubmit(); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !yakshaPanel.hidden) closeYaksha(); });
-
-// ---------------------------------------------------------------
-// RENDER ORCHESTRATION
-// ---------------------------------------------------------------
-function renderAdmin() {
-  renderHeatmap();
-  renderBubbleChart();
-  renderSuggestions();
-  renderUnresolved();
-  renderOverrideSelect();
-  renderPinned();
-  renderAdminStats();
-}
-
-function init() {
-  renderCategoryFilters();
-  renderFaqList();
-  renderTrending();
-  renderProgress();
-  checkPanicMode();
-  updateTicker();
-}
-
-init();
