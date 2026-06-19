@@ -285,6 +285,85 @@
       20%, 60% { transform: translateX(-6px); }
       40%, 80% { transform: translateX(6px); }
     }
+
+    /* Side-by-side layout styles */
+    .login-page-wrapper {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 5rem;
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+      z-index: 5;
+    }
+
+    .login-left-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      max-width: 380px;
+    }
+
+    .login-logo-seal {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 3px solid rgba(189, 0, 255, 0.3);
+      box-shadow: 0 0 25px rgba(189, 0, 255, 0.2);
+      background: white;
+      padding: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .login-logo-seal:hover {
+      transform: scale(1.03) rotate(5deg);
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 35px rgba(0, 243, 255, 0.4);
+    }
+
+    .login-left-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 1.5rem 0 0.5rem 0;
+      text-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+    }
+
+    .login-left-subtitle {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      color: var(--text-secondary-neon);
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+
+    .login-container {
+      margin: 0 !important;
+    }
+
+    @media (max-width: 768px) {
+      .login-page-wrapper {
+        flex-direction: column;
+        gap: 2.5rem;
+      }
+      .login-left-section {
+        max-width: 100%;
+      }
+      .login-logo-seal {
+        width: 140px;
+        height: 140px;
+      }
+      .login-left-title {
+        font-size: 1.5rem;
+        margin-top: 1rem;
+      }
+    }
   </style>
 </head>
 <body class="login-body">
@@ -312,67 +391,78 @@
     </div>
   </div>
 
-  <div class="login-container">
+  <div class="login-page-wrapper">
     
-    <!-- Neon logo section -->
-    <div class="logo-section" style="margin-bottom: 2rem;">
-      <div class="logo-icon">S</div>
-      <h1>SAMAGAMA <span style="font-weight: 300; font-size: 1rem; letter-spacing: 2px; color: var(--neon-cyan); margin-left: 5px;">PORTAL</span></h1>
+    <!-- Left Section: Logo Seal -->
+    <div class="login-left-section">
+      <img src="iit_ropar_logo.jpg" class="login-logo-seal" alt="IIT Ropar Logo">
+      <h2 class="login-left-title">Vicharanashala Lab</h2>
+      <p class="login-left-subtitle">Indian Institute of Technology Ropar</p>
     </div>
 
-    <!-- Login card -->
-    <div class="login-card">
+    <!-- Right Section: Login Card Container -->
+    <div class="login-container">
       
-      <!-- Role tabs toggle selector -->
-      <div class="role-selector-tabs">
-        <button id="tab-student" class="role-tab active" onclick="switchRoleTab('student')">Student Portal</button>
-        <button id="tab-admin" class="role-tab" onclick="switchRoleTab('admin')">Admin Console</button>
+      <!-- Neon logo section -->
+      <div class="logo-section" style="margin-bottom: 2rem;">
+        <div class="logo-icon">S</div>
+        <h1>SAMAGAMA <span style="font-weight: 300; font-size: 1rem; letter-spacing: 2px; color: var(--neon-cyan); margin-left: 5px;">PORTAL</span></h1>
       </div>
 
-      <!-- Error message container -->
-      <div id="login-error" class="login-error-msg"></div>
-
-      <!-- Forms wrapper -->
-      <form id="login-form" onsubmit="handleLoginSubmit(event)">
+      <!-- Login card -->
+      <div class="login-card">
         
-        <!-- Student Inputs Group -->
-        <div id="student-group" class="input-group-fields">
-          <div class="input-box">
-            <label for="student-email" class="input-label">Student Email</label>
-            <input type="email" id="student-email" class="login-input" placeholder="e.g. name@gmail.com" required>
-          </div>
-          <div class="input-box">
-            <label for="student-pass" class="input-label">Password</label>
-            <input type="password" id="student-pass" class="login-input" placeholder="••••••••" required>
-          </div>
+        <!-- Role tabs toggle selector -->
+        <div class="role-selector-tabs">
+          <button id="tab-student" class="role-tab active" onclick="switchRoleTab('student')">Student Portal</button>
+          <button id="tab-admin" class="role-tab" onclick="switchRoleTab('admin')">Admin Console</button>
         </div>
 
-        <!-- Admin Inputs Group -->
-        <div id="admin-group" class="input-group-fields" style="display: none;">
-          <div class="input-box">
-            <label for="admin-email" class="input-label">Admin Email</label>
-            <input type="email" id="admin-email" class="login-input" placeholder="admin@gmail.com">
-          </div>
-          <div class="input-box">
-            <label for="admin-pass" class="input-label">Password</label>
-            <input type="password" id="admin-pass" class="login-input" placeholder="••••••••">
-          </div>
-        </div>
+        <!-- Error message container -->
+        <div id="login-error" class="login-error-msg"></div>
 
-        <button type="submit" class="btn-login-submit">
-          <span>Authorize Entry</span>
-          <span style="font-size: 1.1rem;">➜</span>
-        </button>
+        <!-- Forms wrapper -->
+        <form id="login-form" onsubmit="handleLoginSubmit(event)">
+          
+          <!-- Student Inputs Group -->
+          <div id="student-group" class="input-group-fields">
+            <div class="input-box">
+              <label for="student-email" class="input-label">Student Email</label>
+              <input type="email" id="student-email" class="login-input" placeholder="e.g. name@gmail.com" required>
+            </div>
+            <div class="input-box">
+              <label for="student-pass" class="input-label">Password</label>
+              <input type="password" id="student-pass" class="login-input" placeholder="••••••••" required>
+            </div>
+          </div>
 
-      </form>
+          <!-- Admin Inputs Group -->
+          <div id="admin-group" class="input-group-fields" style="display: none;">
+            <div class="input-box">
+              <label for="admin-email" class="input-label">Admin Email</label>
+              <input type="email" id="admin-email" class="login-input" placeholder="admin@gmail.com">
+            </div>
+            <div class="input-box">
+              <label for="admin-pass" class="input-label">Password</label>
+              <input type="password" id="admin-pass" class="login-input" placeholder="••••••••">
+            </div>
+          </div>
+
+          <button type="submit" class="btn-login-submit">
+            <span>Authorize Entry</span>
+            <span style="font-size: 1.1rem;">➜</span>
+          </button>
+
+        </form>
+
+      </div>
+
+      <div class="login-footer-info">
+        <p>System default admin: <code>admin@gmail.com</code> / password: <code>admin</code></p>
+        <p>Student login accepts any <code>@gmail.com</code> email address.</p>
+      </div>
 
     </div>
-
-    <div class="login-footer-info">
-      <p>System default admin: <code>admin@gmail.com</code> / password: <code>admin</code></p>
-      <p>Student login accepts any <code>@gmail.com</code> email address.</p>
-    </div>
-
   </div>
 
   <script>
