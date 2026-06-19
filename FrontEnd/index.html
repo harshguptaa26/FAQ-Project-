@@ -1,1 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FAQ Intelligence Engine — Samagama</title>
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem("faq-engine-theme");
+      var theme = stored || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    } catch (e) {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
 
+  <!-- ================= HEADER ================= -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark">◈</span>
+        <div class="brand-text">
+          <span class="brand-name">FAQ Intelligence Engine</span>
+          <span class="brand-sub">samagama.in · Vicharanashala Lab, IIT Ropar</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <nav class="view-toggle" role="tablist" aria-label="View switch">
+          <button class="toggle-btn is-active" data-view="student" role="tab" aria-selected="true">Student view</button>
+          <button class="toggle-btn" data-view="admin" role="tab" aria-selected="false">Admin view</button>
+        </nav>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= LIVE STATS TICKER ================= -->
+  <div class="stats-ticker" id="statsTicker">
+    <div class="ticker-inner">
+      <span class="ticker-item"><span class="ticker-num" id="tTotal">0</span> questions answered</span>
+      <span class="ticker-sep">·</span>
+      <span class="ticker-item"><span class="ticker-num" id="tSearches">0</span> searches this week</span>
+      <span class="ticker-sep">·</span>
+      <span class="ticker-item"><span class="ticker-num" id="tCritical">0</span> critical alerts</span>
+      <span class="ticker-sep">·</span>
+      <span class="ticker-item"><span class="ticker-num" id="tSatisfied">0</span>% satisfaction</span>
+    </div>
+  </div>
+
+  <!-- ================= PANIC BANNER ================= -->
+  <div class="panic-banner" id="panicBanner" hidden>
+    <span class="panic-pulse" aria-hidden="true"></span>
+    <span class="panic-text">
+      <strong>NOC Panic Alert.</strong> Searches for "NOC Dates" jumped from 22 to 96 today. NOC questions have been moved to the top of the portal.
+    </span>
+    <button class="panic-dismiss" id="panicDismiss" aria-label="Dismiss alert">✕</button>
+  </div>
+
+  <!-- ================= STUDENT VIEW ================= -->
+  <main class="view" id="studentView">
+
+    <section class="hero">
+      <div class="hero-inner">
+        <p class="hero-eyebrow">The FAQ that fixes itself</p>
+        <h1 class="hero-title">Every question you ask<br><em>teaches this page</em> something.</h1>
+        <p class="hero-desc">Search, read, vote — the page learns where students get stuck and surfaces what matters most, automatically.</p>
+        <div class="hero-chips">
+          <span class="hero-chip">🔥 NOC dates most searched</span>
+          <span class="hero-chip">⚡ 96 searches today</span>
+          <span class="hero-chip">✓ Auto-updating</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE SEARCH -->
+    <section class="search-section">
+      <div class="search-box" id="searchBox">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Try "when will NOC dates be announced" or "how do I sign in to ViBe"…" autocomplete="off" />
+        <span class="intent-chip" id="intentChip" hidden></span>
+        <button class="search-clear" id="searchClear" hidden aria-label="Clear search">✕</button>
+      </div>
+      <div class="didyoumean" id="didYouMean" hidden></div>
+      <div class="search-results" id="searchResults" hidden></div>
+    </section>
+
+    <!-- TRENDING THIS WEEK -->
+    <section class="trending-section" id="trendingSection">
+      <div class="section-head">
+        <h2 class="section-title">Trending this week</h2>
+        <span class="section-note">Rolling 7-day window · updates automatically</span>
+      </div>
+      <div class="trending-row" id="trendingRow"></div>
+    </section>
+
+    <!-- PROGRESS TRACKER -->
+    <section class="progress-section">
+      <div class="progress-card">
+        <div class="progress-header">
+          <div class="progress-text">
+            <span class="progress-label">Your reading progress</span>
+            <span class="progress-count"><span id="progressDone">0</span> of <span id="progressTotal">0</span> questions read</span>
+          </div>
+          <div class="progress-milestone" id="progressMilestone" hidden>🎉 Great progress!</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-steps" id="progressSteps"></div>
+      </div>
+    </section>
+
+    <!-- FAQ LIST -->
+    <section class="faq-section">
+      <div class="section-head">
+        <h2 class="section-title">All questions</h2>
+        <div class="faq-controls">
+          <label class="sort-label" for="sortSelect">Sort by</label>
+          <select id="sortSelect" class="sort-select">
+            <option value="urgency">Urgency (critical first)</option>
+            <option value="trending">Most searched this week</option>
+            <option value="category">Category</option>
+          </select>
+          <div class="filter-chips" id="categoryFilters"></div>
+        </div>
+      </div>
+
+      <div class="faq-list" id="faqList"></div>
+    </section>
+
+  </main>
+
+  <!-- ================= ADMIN VIEW ================= -->
+  <main class="view" id="adminView" hidden>
+
+    <section class="admin-hero">
+      <p class="hero-eyebrow">Admin / instrumentation</p>
+      <h1 class="admin-title">Where the portal is failing, <em>at a glance.</em></h1>
+      <p class="hero-desc">Every search, click, and thumbs-down becomes a signal here — instead of reading a hundred questions by hand.</p>
+    </section>
+
+    <!-- ADMIN STAT CARDS -->
+    <section class="admin-stats-row">
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Total clicks</span>
+        <span class="admin-stat-num" id="aStatClicks">—</span>
+        <span class="admin-stat-sub">across all FAQs</span>
+      </div>
+      <div class="admin-stat-card accent-critical">
+        <span class="admin-stat-label">Critical FAQs</span>
+        <span class="admin-stat-num" id="aStatCritical">—</span>
+        <span class="admin-stat-sub">need attention now</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Avg satisfaction</span>
+        <span class="admin-stat-num" id="aStatSatisfied">—</span>
+        <span class="admin-stat-sub">thumbs up rate</span>
+      </div>
+      <div class="admin-stat-card accent-gold">
+        <span class="admin-stat-label">Search spikes</span>
+        <span class="admin-stat-num" id="aStatSpikes">—</span>
+        <span class="admin-stat-sub">vs last week</span>
+      </div>
+    </section>
+
+    <!-- CONFUSION HEATMAP -->
+    <section class="admin-block">
+      <div class="section-head">
+        <h2 class="section-title">Confusion heatmap</h2>
+        <span class="section-note">Composite score per section · 0–100</span>
+      </div>
+      <div class="heatmap-table" id="heatmapTable"></div>
+    </section>
+
+    <!-- DOUBT CLUSTER BUBBLE CHART -->
+    <section class="admin-block bubble-block">
+      <div class="section-head">
+        <h2 class="section-title">Doubt cluster map</h2>
+        <span class="section-note">Bubble size = volume of doubts · color = urgency</span>
+      </div>
+      <div class="bubble-stage" id="bubbleStage">
+        <svg id="bubbleSvg" viewBox="0 0 800 440" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="bubble-tooltip" id="bubbleTooltip" hidden></div>
+      </div>
+      <div class="bubble-legend">
+        <span><i class="dot" style="background:#e85d4c"></i> Critical / exploding</span>
+        <span><i class="dot" style="background:#e8a23d"></i> Rising</span>
+        <span><i class="dot" style="background:#3d7a8c"></i> Steady</span>
+        <span><i class="dot" style="background:#4a8577"></i> Healthy</span>
+      </div>
+    </section>
+
+    <div class="admin-grid">
+      <!-- SELF-HEALING SUGGESTIONS -->
+      <section class="admin-block">
+        <div class="section-head">
+          <h2 class="section-title">Self-healing suggestions</h2>
+          <span class="section-note">System-generated</span>
+        </div>
+        <div class="suggestion-list" id="suggestionList"></div>
+      </section>
+
+      <!-- UNRESOLVED CLUSTERS -->
+      <section class="admin-block">
+        <div class="section-head">
+          <h2 class="section-title">Unresolved clusters</h2>
+          <span class="section-note">High thumbs-down, low confidence</span>
+        </div>
+        <div class="unresolved-list" id="unresolvedList"></div>
+      </section>
+    </div>
+
+    <!-- URGENCY OVERRIDE -->
+    <section class="admin-block">
+      <div class="section-head">
+        <h2 class="section-title">Manual urgency override</h2>
+        <span class="section-note">Pin a question to Critical with a banner note</span>
+      </div>
+      <div class="override-panel">
+        <select id="overrideSelect" class="override-select"></select>
+        <input type="text" id="overrideNote" class="override-input" placeholder="e.g. Updated policy — read before applying" />
+        <button class="btn-primary" id="overrideApply">📌 Pin as Critical</button>
+      </div>
+      <div class="override-pinned" id="overridePinned"></div>
+    </section>
+
+  </main>
+
+  <!-- ================= FAQ DETAIL MODAL ================= -->
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalQuestion">
+      <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+      <span class="modal-category" id="modalCategory"></span>
+      <h3 class="modal-question" id="modalQuestion"></h3>
+      <div class="modal-answer-card">
+        <p class="modal-answer" id="modalAnswer"></p>
+      </div>
+
+      <div class="modal-vote">
+        <span class="vote-label">Was this helpful?</span>
+        <button class="vote-btn" id="voteUp" data-vote="up">👍 <span id="voteUpCount">0</span></button>
+        <button class="vote-btn" id="voteDown" data-vote="down">👎 <span id="voteDownCount">0</span></button>
+        <span class="vote-feedback" id="voteFeedback" aria-live="polite"></span>
+      </div>
+
+      <div class="modal-related">
+        <h4 class="related-title">You may also need</h4>
+        <div class="related-list" id="relatedList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= YAKSHA-MINI CHAT WIDGET ================= -->
+  <button class="yaksha-launcher" id="yakshaLauncher" aria-label="Open Yaksha-mini chat">
+    <span class="yaksha-ping" id="yakshaPing"></span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  </button>
+
+  <div class="yaksha-panel" id="yakshaPanel" hidden>
+    <div class="yaksha-header">
+      <span class="yaksha-avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      </span>
+      <div class="yaksha-header-text">
+        <span class="yaksha-title">Yaksha-mini</span>
+        <span class="yaksha-status"><i class="yaksha-dot"></i>Answers from this site</span>
+      </div>
+      <button class="yaksha-close" id="yakshaClose" aria-label="Close">✕</button>
+    </div>
+
+    <div class="yaksha-messages" id="yakshaMessages">
+      <p class="yaksha-empty"><strong>Ask me anything about the internship.</strong>I search every FAQ on this page and answer from there — try "when do NOC dates open" or "can I use AI for Rosetta".</p>
+    </div>
+
+    <div class="yaksha-inputrow">
+      <input type="text" id="yakshaInput" class="yaksha-input" placeholder="Type a question…" autocomplete="off" />
+      <button class="yaksha-send" id="yakshaSend" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+    <div class="yaksha-footer">For your specific case, log in at <a href="https://samagama.in" target="_blank" rel="noopener">samagama.in</a> and ask Yaksha.</div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
