@@ -39,8 +39,8 @@
             <input type="email" id="student-email" class="login-input" placeholder="e.g. name@gmail.com" required>
           </div>
           <div class="input-box">
-            <label for="student-id" class="input-label">Roll Number</label>
-            <input type="text" id="student-id" class="login-input" placeholder="e.g. SG20261042" required>
+            <label for="student-pass" class="input-label">Password</label>
+            <input type="password" id="student-pass" class="login-input" placeholder="••••••••" required>
           </div>
         </div>
 
@@ -67,7 +67,7 @@
 
     <div class="login-footer-info">
       <p>System default admin: <code>admin@gmail.com</code> / password: <code>admin</code></p>
-      <p>Student login accepts any <code>@gmail.com</code> email address.</p>
+      <p>Student login accepts any <code>@gmail.com</code> email and any password.</p>
     </div>
 
   </div>
@@ -92,7 +92,7 @@
         adminFields.style.display = 'none';
         
         document.getElementById('student-email').setAttribute('required', 'true');
-        document.getElementById('student-id').setAttribute('required', 'true');
+        document.getElementById('student-pass').setAttribute('required', 'true');
         
         document.getElementById('admin-email').removeAttribute('required');
         document.getElementById('admin-pass').removeAttribute('required');
@@ -101,7 +101,7 @@
         adminFields.style.display = 'block';
         
         document.getElementById('student-email').removeAttribute('required');
-        document.getElementById('student-id').removeAttribute('required');
+        document.getElementById('student-pass').removeAttribute('required');
         
         document.getElementById('admin-email').setAttribute('required', 'true');
         document.getElementById('admin-pass').setAttribute('required', 'true');
@@ -116,7 +116,7 @@
 
       if (activeRole === 'student') {
         const email = document.getElementById('student-email').value.trim();
-        const roll = document.getElementById('student-id').value.trim();
+        const pass = document.getElementById('student-pass').value;
 
         if (!email.endsWith('@gmail.com')) {
           showError("Access Denied: Please use a valid '@gmail.com' student email address.");
@@ -127,8 +127,7 @@
         localStorage.setItem('samagama_session', JSON.stringify({
           isLoggedIn: true,
           role: 'student',
-          email: email,
-          id: roll
+          email: email
         }));
         
         // Push initial user-context view state
