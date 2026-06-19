@@ -23,15 +23,18 @@
     <!-- HEADER BAR -->
     <header>
       <div class="logo-section">
-        <div class="logo-icon">S</div>
-        <h1>SAMAGAMA <span style="font-weight: 300; font-size: 0.9rem; letter-spacing: 2px; color: var(--neon-cyan); margin-left: 5px;">FAQ INTEL</span></h1>
+        <svg viewBox="0 0 24 24" width="22" height="22" style="fill: var(--accent-gold); min-width: 22px;"><path d="M12 2L2 12l10 10 10-10L12 2zm0 16.2L5.8 12 12 5.8 18.2 12 12 18.2z"/></svg>
+        <div style="display: flex; flex-direction: column; margin-left: 0.5rem;">
+          <h1 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0; line-height: 1.2;">FAQ Intelligence Engine</h1>
+          <span style="font-family: var(--font-primary); font-size: 0.75rem; color: var(--accent-gold); font-weight: 500; letter-spacing: 0.5px;">samagama.in &bull; Vicharanashala Lab, IIT Ropar</span>
+        </div>
       </div>
       <div class="nav-controls">
         <span id="user-display-email" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); margin-right: 0.5rem; display: none;"></span>
-        <button id="view-student-btn" class="btn-toggle active" onclick="toggleView('student')">Student Portal</button>
-        <button id="view-admin-btn" class="btn-toggle" onclick="toggleView('admin')">Admin Console</button>
+        <button id="view-student-btn" class="btn-toggle active" onclick="toggleView('student')">Student View</button>
+        <button id="view-admin-btn" class="btn-toggle" onclick="toggleView('admin')">Admin View</button>
         <button id="theme-toggle" class="btn-theme" onclick="toggleTheme()" aria-label="Toggle Theme">☀️</button>
-        <button id="logout-btn" class="btn-theme" onclick="handleLogout()" aria-label="Log Out" title="Log Out" style="margin-left: 0.5rem; border-color: var(--neon-pink); color: var(--neon-pink);">🚪</button>
+        <button id="logout-btn" class="btn-theme" onclick="handleLogout()" aria-label="Log Out" title="Log Out" style="margin-left: 0.5rem; border-color: var(--accent-gold); color: var(--accent-gold);">🚪</button>
       </div>
     </header>
 
@@ -40,11 +43,11 @@
       <div class="panic-content">
         <span class="panic-icon">🚨</span>
         <div>
-          <div class="panic-title">NOC Panic Alert Active</div>
-          <p style="font-size: 0.85rem; opacity: 0.9;">System detected rapid spikes in NOC searches. NOC cards are locked at top priority.</p>
+          <span class="panic-title">NOC Panic Alert:</span>
+          <span style="font-size: 0.85rem; opacity: 0.95; margin-left: 0.25rem;">Searches for "NOC Dates" jumped from 22 to 96 today. NOC questions have been moved to the top of the portal.</span>
         </div>
       </div>
-      <button class="panic-dismiss" onclick="dismissPanic()" aria-label="Dismiss Alert">×</button>
+      <button class="panic-dismiss" onclick="dismissPanic()" aria-label="Dismiss Alert">&times;</button>
     </div>
 
     <!-- MAIN BODY -->
@@ -112,15 +115,34 @@
 
         <!-- ================= PANEL 2: FAQ (Core) ================= -->
         <div id="panel-faq" class="sub-nav-panel">
+          
+          <!-- Hero Intro Section -->
+          <div class="hero-intro">
+            <span class="hero-tag">The FAQ That Fixes Itself</span>
+            <h2 class="hero-title">Every question you ask teaches this page something.</h2>
+            <p class="hero-subtitle">Search, read, vote &mdash; the page learns where students get stuck and surfaces what matters most, automatically.</p>
+          </div>
+
           <!-- Search bar layout -->
           <div class="search-container">
             <div class="search-wrapper">
               <span class="search-icon">🔍</span>
-              <input type="text" id="search-input" class="search-input" placeholder="Search doubts (e.g. 'NOC requirements', 'ViBe registration link')..." aria-label="Search FAQ">
+              <input type="text" id="search-input" class="search-input" placeholder="Try &ldquo;when will NOC dates be announced&rdquo; or &ldquo;how do I sign in to ViBe&rdquo;&hellip;" aria-label="Search FAQ">
               <span id="intent-badge" class="intent-badge">Intent</span>
             </div>
             <div id="did-you-mean-container" class="did-you-mean">
               Did you mean: <span id="did-you-mean-suggestion" class="did-you-mean-suggestion">NOC</span>?
+            </div>
+          </div>
+
+          <!-- Trending doubts this week -->
+          <div class="trending-container">
+            <div class="trending-header-row">
+              <h3>Trending this week</h3>
+              <span class="trending-subtitle">Rolling 7-day window &bull; updates automatically</span>
+            </div>
+            <div id="trending-list" class="trending-scroll-container">
+              <!-- Trending items dynamic rendering -->
             </div>
           </div>
 
@@ -132,17 +154,6 @@
             </div>
             <div class="progress-bar-bg">
               <div id="progress-bar-fill" class="progress-bar-fill"></div>
-            </div>
-          </div>
-
-          <!-- Trending This Week Banner -->
-          <div class="trending-container">
-            <div class="trending-header">
-              <span>🔥</span>
-              <h3>Trending doubts this week</h3>
-            </div>
-            <div id="trending-list" class="trending-list">
-              <!-- Trending items dynamic rendering -->
             </div>
           </div>
 
@@ -248,11 +259,42 @@
           <div class="admin-card">
             <div class="admin-card-title">
               <span>Self-Healing Suggestion Panel</span>
-              <span style="font-size: 0.75rem; color: var(--neon-pink); font-weight: bold; background: rgba(255, 0, 127, 0.1); padding: 0.1rem 0.4rem; border-radius: 4px;">Active AI</span>
+              <span style="font-size: 0.75rem; color: var(--accent-gold-dark); background: var(--accent-gold-light); padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: bold;">Active AI</span>
             </div>
             <div id="admin-suggestions-list" class="suggestions-list">
               <!-- Suggestions list cards -->
             </div>
+          </div>
+
+          <!-- Urgency Override Console -->
+          <div class="admin-card">
+            <div class="admin-card-title">Urgency Override Console</div>
+            <form id="override-form" class="admin-override-form" onsubmit="handleUrgencyOverride(event)">
+              <div class="input-box" style="margin-bottom: 1rem;">
+                <label class="input-label" for="override-faq-select">Select FAQ Question</label>
+                <select id="override-faq-select" class="login-input" style="width: 100%; height: 38px;">
+                  <!-- Dynamically populated via JS -->
+                </select>
+              </div>
+              <div class="input-box" style="margin-bottom: 1rem;">
+                <label class="input-label" for="override-level">Override Level</label>
+                <select id="override-level" class="login-input" style="width: 100%; height: 38px;">
+                  <option value="auto">Auto (Calculate via Engine)</option>
+                  <option value="critical">Critical (Force to Top & Banner)</option>
+                  <option value="high">High Urgency</option>
+                  <option value="medium">Medium Urgency</option>
+                  <option value="low">Low Urgency</option>
+                </select>
+              </div>
+              <div class="input-box" style="margin-bottom: 1.25rem;">
+                <label class="input-label" for="override-note">Custom Policy Note / Banner text</label>
+                <input type="text" id="override-note" class="login-input" placeholder="e.g. Updated policy &mdash; read before applying">
+              </div>
+              <button type="submit" class="btn-login-submit" style="padding: 0.65rem 1rem; width: 100%;">
+                <span>Apply Override</span>
+                <span>📌</span>
+              </button>
+            </form>
           </div>
 
           <!-- Simulation Sandbox -->
