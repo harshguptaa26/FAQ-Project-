@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Samagama FAQ Portal</title>
+  <meta name="description" content="Secure portal access authentication gate for Samagama FAQ Intelligence Engine.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-body">
+
+  <div class="login-container">
+    
+    <!-- Neon logo section -->
+    <div class="logo-section" style="justify-content: center; margin-bottom: 2rem;">
+      <div class="logo-icon">S</div>
+      <h1 style="font-size: 1.8rem;">SAMAGAMA <span style="font-weight: 300; font-size: 1rem; letter-spacing: 2px; color: var(--neon-cyan); margin-left: 5px;">PORTAL</span></h1>
+    </div>
+
+    <!-- Login card -->
+    <div class="login-card">
+      
+      <!-- Role tabs toggle selector -->
+      <div class="role-selector-tabs">
+        <button id="tab-student" class="role-tab active" onclick="switchRoleTab('student')">Student Portal</button>
+        <button id="tab-admin" class="role-tab" onclick="switchRoleTab('admin')">Admin Console</button>
+      </div>
+
+      <!-- Error message container -->
+      <div id="login-error" class="login-error-msg"></div>
+
+      <!-- Forms wrapper -->
+      <form id="login-form" onsubmit="handleLoginSubmit(event)">
+        
+        <!-- Student Inputs Group -->
+        <div id="student-group" class="input-group-fields">
+          <div class="input-box">
+            <label for="student-email" class="input-label">Student Email</label>
+            <input type="email" id="student-email" class="login-input" placeholder="e.g. name@gmail.com" required>
+          </div>
+          <div class="input-box">
+            <label for="student-id" class="input-label">Roll Number</label>
+            <input type="text" id="student-id" class="login-input" placeholder="e.g. SG20261042" required>
+          </div>
+        </div>
+
+        <!-- Admin Inputs Group -->
+        <div id="admin-group" class="input-group-fields" style="display: none;">
+          <div class="input-box">
+            <label for="admin-email" class="input-label">Admin Email</label>
+            <input type="email" id="admin-email" class="login-input" placeholder="admin@gmail.com">
+          </div>
+          <div class="input-box">
+            <label for="admin-pass" class="input-label">Password</label>
+            <input type="password" id="admin-pass" class="login-input" placeholder="••••••••">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login-submit">
+          <span>Authorize Entry</span>
+          <span style="font-size: 1.1rem;">➜</span>
+        </button>
+
+      </form>
+
+    </div>
+
+    <div class="login-footer-info">
+      <p>System default admin: <code>admin@gmail.com</code> / password: <code>admin</code></p>
+      <p>Student login accepts any <code>@gmail.com</code> email address.</p>
+    </div>
+
+  </div>
+
+  <script>
+    let activeRole = 'student';
+
+    // Toggle between Student & Admin tabs
+    function switchRoleTab(role) {
+      activeRole = role;
+      document.getElementById('tab-student').classList.toggle('active', role === 'student');
+      document.getElementById('tab-admin').classList.toggle('active', role === 'admin');
+      
+      const studentFields = document.getElementById('student-group');
+      const adminFields = document.getElementById('admin-group');
+      const errorDiv = document.getElementById('login-error');
+      
+      errorDiv.style.display = 'none';
+
+      if (role === 'student') {
+        studentFields.style.display = 'block';
+        adminFields.style.display = 'none';
+        
+        document.getElementById('student-email').setAttribute('required', 'true');
+        document.getElementById('student-id').setAttribute('required', 'true');
+        
+        document.getElementById('admin-email').removeAttribute('required');
+        document.getElementById('admin-pass').removeAttribute('required');
+      } else {
+        studentFields.style.display = 'none';
+        adminFields.style.display = 'block';
+        
+        document.getElementById('student-email').removeAttribute('required');
+        document.getElementById('student-id').removeAttribute('required');
+        
+        document.getElementById('admin-email').setAttribute('required', 'true');
+        document.getElementById('admin-pass').setAttribute('required', 'true');
+      }
+    }
+
+    // Handles form validations & redirects
+    function handleLoginSubmit(event) {
+      event.preventDefault();
+      const errorDiv = document.getElementById('login-error');
+      errorDiv.style.display = 'none';
+
+      if (activeRole === 'student') {
+        const email = document.getElementById('student-email').value.trim();
+        const roll = document.getElementById('student-id').value.trim();
+
+        if (!email.endsWith('@gmail.com')) {
+          showError("Access Denied: Please use a valid '@gmail.com' student email address.");
+          return;
+        }
+
+        // Success! Set session details
+        localStorage.setItem('samagama_session', JSON.stringify({
+          isLoggedIn: true,
+          role: 'student',
+          email: email,
+          id: roll
+        }));
+        
+        // Push initial user-context view state
+        localStorage.setItem('samagama_view', 'student');
+        
+        window.location.href = 'index.html';
+        
+      } else {
+        const email = document.getElementById('admin-email').value.trim();
+        const pass = document.getElementById('admin-pass').value;
+
+        // Verify simulated Admin credential parameters
+        if (email === 'admin@gmail.com' && pass === 'admin') {
+          localStorage.setItem('samagama_session', JSON.stringify({
+            isLoggedIn: true,
+            role: 'admin',
+            email: email
+          }));
+          
+          // Push initial admin-context view state
+          localStorage.setItem('samagama_view', 'admin');
+          
+          window.location.href = 'index.html';
+        } else {
+          showError("Authentication Failed: Invalid admin email or password.");
+        }
+      }
+    }
+
+    function showError(msg) {
+      const errorDiv = document.getElementById('login-error');
+      errorDiv.innerText = msg;
+      errorDiv.style.display = 'block';
+      
+      // Minor shake animation for login card on error
+      const card = document.querySelector('.login-card');
+      card.style.animation = 'shake-horizontal 0.4s ease';
+      setTimeout(() => { card.style.animation = 'none'; }, 400);
+    }
+
+    // Clean initial loads
+    window.addEventListener('DOMContentLoaded', () => {
+      // Clear out active sessions to force re-entry if accessing login directly
+      localStorage.removeItem('samagama_session');
+    });
+  </script>
+
+</body>
+</html>
