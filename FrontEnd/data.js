@@ -1,1424 +1,1103 @@
-// State Variables
-let faqData = [];
-let suggestions = [];
-let currentTheme = 'light'; // Default to light warm cream
-let currentView = 'student';
-let activeCategory = 'all';
-let searchQuery = '';
-let panicMode = false;
-let readSections = new Set();
-let chatbotHistory = [];
-let chatWindowOpen = false;
-let currentSubNav = 'faq';
-let voiceIssuesData = [];
-let urgencyOverrides = {}; // Map of faqId -> { level: 'critical'|'high'|'medium'|'low'|'auto', note: '...' }
+// Database of all official Vicharanashala FAQ Sections & Chat presets
+const INITIAL_FAQ_DATA = [
+  // 1. About the internship
+  {
+    id: "about-1",
+    section: "About the Internship",
+    sectionCode: "about",
+    question: "What is the Vicharanashala internship?",
+    answer: "Vicharanashala is Samagama's premier research and development internship program, run in collaboration with leading faculty members from IIT Ropar. It offers interns the opportunity to work on cutting-edge industry problems, research projects in AI, and software engineering systems.",
+    urgencyScore: 10,
+    thumbsUp: 15,
+    thumbsDown: 0,
+    views: 120,
+    searches: 30,
+    similarIds: ["about-2", "about-5"],
+    nextDoubtIds: ["about-2"]
+  },
+  {
+    id: "about-2",
+    section: "About the Internship",
+    sectionCode: "about",
+    question: "What is VINS?",
+    answer: "VINS (Vicharanashala Internship Network System) is the virtual/online track of our internship. VINS provides remote access to coursework, cloud-based project development nodes, mentor standups, and digital viva-voce assessments.",
+    urgencyScore: 15,
+    thumbsUp: 22,
+    thumbsDown: 1,
+    views: 140,
+    searches: 45,
+    similarIds: ["about-1", "about-3"],
+    nextDoubtIds: ["about-3"]
+  },
+  {
+    id: "about-3",
+    section: "About the Internship",
+    sectionCode: "about",
+    question: "What are the phases of VINS, and what do the badges mean?",
+    answer: "VINS is divided into three key phases: (1) Phase 1: Coursework & LMS learning, (2) Phase 2: Live project development under mentorship, and (3) Phase 3: ViBe presentation and grading. Badges on your dashboard represent milestones achieved, such as 'Git Expert' or 'AI Specialist'.",
+    urgencyScore: 25,
+    thumbsUp: 34,
+    thumbsDown: 2,
+    views: 180,
+    searches: 60,
+    similarIds: ["about-2", "phase1-1"],
+    nextDoubtIds: ["phase1-1"]
+  },
+  {
+    id: "about-4",
+    section: "About the Internship",
+    sectionCode: "about",
+    question: "Who is the internship for? Are alumni eligible?",
+    answer: "The internship is primarily designed for undergraduate and postgraduate engineering and science students. Alumni who have recently graduated within the last 6 months are eligible to apply, provided they have not taken up full-time employment elsewhere.",
+    urgencyScore: 5,
+    thumbsUp: 12,
+    thumbsDown: 0,
+    views: 70,
+    searches: 12,
+    similarIds: ["about-1"],
+    nextDoubtIds: ["selection-1"]
+  },
+  {
+    id: "about-5",
+    section: "About the Internship",
+    sectionCode: "about",
+    question: "Is this the same as IIT Ropar's official Summer Research Internship?",
+    answer: "No, this is an independent program powered by Samagama. However, it is designed and executed in collaboration with faculty members from IIT Ropar, who co-supervise select research domains and form part of the evaluation panel.",
+    urgencyScore: 18,
+    thumbsUp: 28,
+    thumbsDown: 3,
+    views: 165,
+    searches: 75,
+    similarIds: ["about-1", "about-2"],
+    nextDoubtIds: ["selection-6"]
+  },
+  {
+    id: "about-6",
+    section: "About the Internship",
+    sectionCode: "about",
+    question: "I have to attend my class tomorrow/today/some day — can I take leave?",
+    answer: "Yes, you can request short leaves (up to 2 consecutive days) directly via the VINS portal under the 'Leave Requests' tab. You must inform your project mentor beforehand. Your daily participation targets will be adjusted accordingly.",
+    urgencyScore: 35,
+    thumbsUp: 45,
+    thumbsDown: 6,
+    views: 220,
+    searches: 90,
+    similarIds: ["dates-5"],
+    nextDoubtIds: ["dates-5"]
+  },
 
-// Intent patterns for Search Intent Detection
-const INTENT_PATTERNS = [
-  { keyword: 'when', label: 'Timeline / Date' },
-  { keyword: 'date', label: 'Timeline / Date' },
-  { keyword: 'deadline', label: 'Timeline / Date' },
-  { keyword: 'how', label: 'Process / Guide' },
-  { keyword: 'register', label: 'Process / Guide' },
-  { keyword: 'request', label: 'Process / Guide' },
-  { keyword: 'who', label: 'Authority / Contact' },
-  { keyword: 'where', label: 'Location / Link' },
-  { keyword: 'link', label: 'Location / Link' },
-  { keyword: 'what', label: 'Information' },
-  { keyword: 'why', label: 'Reasoning' }
+  // 2. Timing and dates
+  {
+    id: "dates-1",
+    section: "Timing and Dates",
+    sectionCode: "dates",
+    question: "When can I start?",
+    answer: "The summer cohort is scheduled to officially start on July 1, 2026. However, if your academic exams finish early, you can request an early start date (June 20 onwards) by contacting the program office.",
+    urgencyScore: 55,
+    thumbsUp: 60,
+    thumbsDown: 4,
+    views: 310,
+    searches: 120,
+    similarIds: ["dates-3", "dates-4"],
+    nextDoubtIds: ["dates-3"]
+  },
+  {
+    id: "dates-2",
+    section: "Timing and Dates",
+    sectionCode: "dates",
+    question: "How long is the internship?",
+    answer: "The core program spans exactly 8 weeks. It requires a commitment of 35-40 hours per week for project tasks, live mentoring, and coursework reviews.",
+    urgencyScore: 30,
+    thumbsUp: 48,
+    thumbsDown: 1,
+    views: 195,
+    searches: 50,
+    similarIds: ["dates-1"],
+    nextDoubtIds: ["dates-1"]
+  },
+  {
+    id: "dates-3",
+    section: "Timing and Dates",
+    sectionCode: "dates",
+    question: "Can I start in July, August or later if I have exams now?",
+    answer: "Yes, you can defer your start date by up to 3 weeks if you have conflicting university exams. Deferrals must be officially requested via the 'Change Dates' page, along with an upload of your exam datasheet.",
+    urgencyScore: 78,
+    thumbsUp: 85,
+    thumbsDown: 12,
+    views: 410,
+    searches: 195,
+    similarIds: ["dates-1", "dates-4"],
+    nextDoubtIds: ["dates-4"]
+  },
+  {
+    id: "dates-4",
+    section: "Timing and Dates",
+    sectionCode: "dates",
+    question: "Can I start with the cohort and take a relaxation during my exam window?",
+    answer: "Yes! If you experience university exams midway through the internship, you can toggle 'Exam Mode' on your VINS dashboard. This lowers your daily Spurti Points target and coursework quotas for a maximum of 7 days.",
+    urgencyScore: 82,
+    thumbsUp: 94,
+    thumbsDown: 15,
+    views: 450,
+    searches: 210,
+    similarIds: ["dates-3", "dates-5", "spurti-4"],
+    nextDoubtIds: ["spurti-4"]
+  },
+  {
+    id: "dates-5",
+    section: "Timing and Dates",
+    sectionCode: "dates",
+    question: "Can I take leave or get an exemption during the internship for an exam scheduled in June?",
+    answer: "Exemptions for examinations scheduled in June (before the official cohort launch) are generally approved automatically if they overlap with early onboarding. Submit your dates in the portal under early-onboarding preferences.",
+    urgencyScore: 40,
+    thumbsUp: 31,
+    thumbsDown: 2,
+    views: 180,
+    searches: 65,
+    similarIds: ["about-6", "dates-4"],
+    nextDoubtIds: ["about-6"]
+  },
+  {
+    id: "dates-6",
+    section: "Timing and Dates",
+    sectionCode: "dates",
+    question: "Are orientation session recordings shared with interns, and can project or group assignments be changed after watching them?",
+    answer: "Yes, all orientation session videos are uploaded to the Vibe LMS within 2 hours of the live stream. Group allocations are final once projects begin. However, you can email support for critical changes before Phase 2 starts.",
+    urgencyScore: 20,
+    thumbsUp: 28,
+    thumbsDown: 1,
+    views: 130,
+    searches: 42,
+    similarIds: ["phase1-5", "phase1-6"],
+    nextDoubtIds: ["phase1-5"]
+  },
+
+  // 3. NOC (No Objection Certificate)
+  {
+    id: "noc-1",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "What dates do I put on the NOC?",
+    answer: "The NOC dates must cover the entire duration of your internship. The standard template assumes July 1, 2026, to August 25, 2026. If you have requested an alternate start date, ensure the NOC aligns with those dates.",
+    urgencyScore: 85,
+    thumbsUp: 74,
+    thumbsDown: 11,
+    views: 390,
+    searches: 240,
+    similarIds: ["noc-3", "noc-4"],
+    nextDoubtIds: ["noc-3"]
+  },
+  {
+    id: "noc-2",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "Who can sign the NOC?",
+    answer: "The No Objection Certificate can be signed by your Department Head (HOD), college Dean, Program Chair, or the official Placement Coordinator of your university.",
+    urgencyScore: 45,
+    thumbsUp: 52,
+    thumbsDown: 2,
+    views: 210,
+    searches: 90,
+    similarIds: ["noc-5", "noc-11"],
+    nextDoubtIds: ["noc-11"]
+  },
+  {
+    id: "noc-3",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "When do I submit the NOC? Is the deadline hard?",
+    answer: "NOC submissions must be completed before July 10, 2026. This deadline is critical to complete HOD approvals. Under special conditions, you can request a 3-day extension through the Dean's support portal.",
+    urgencyScore: 92,
+    thumbsUp: 88,
+    thumbsDown: 18,
+    views: 480,
+    searches: 290,
+    similarIds: ["noc-1", "noc-9"],
+    nextDoubtIds: ["noc-9"]
+  },
+  {
+    id: "noc-4",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "What format should I use? Do I need to design it myself?",
+    answer: "You do not need to design it. A standard NOC template is available for download on the VINS dashboard. If your college requires their own format, they can print it on college letterhead containing the same declaration.",
+    urgencyScore: 60,
+    thumbsUp: 67,
+    thumbsDown: 8,
+    views: 320,
+    searches: 150,
+    similarIds: ["noc-5", "noc-8"],
+    nextDoubtIds: ["noc-8"]
+  },
+  {
+    id: "noc-5",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "What if my college / Program Chair gives me an NOC in their own format?",
+    answer: "College-specific NOC formats are fully acceptable as long as they state that the college has no objection to you joining the 8-week online program and specify your name, roll number, and correct dates.",
+    urgencyScore: 50,
+    thumbsUp: 59,
+    thumbsDown: 5,
+    views: 280,
+    searches: 130,
+    similarIds: ["noc-4", "noc-2"],
+    nextDoubtIds: ["noc-4"]
+  },
+  {
+    id: "noc-6",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "Does it need to be signed by hand?",
+    answer: "Physical signatures (signed by hand) are preferred. However, digitally verified signatures using official software (DocuSign, Adobe Sign) are also accepted. Plain typed text signatures will be rejected.",
+    urgencyScore: 35,
+    thumbsUp: 44,
+    thumbsDown: 3,
+    views: 190,
+    searches: 80,
+    similarIds: ["noc-2"],
+    nextDoubtIds: ["noc-2"]
+  },
+  {
+    id: "noc-7",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "Can my HOD email the NOC instead of uploading it?",
+    answer: "No, HODs cannot email the NOC directly. All documents must be uploaded directly by the student in PDF format via the VINS portal link to link it to your profile.",
+    urgencyScore: 25,
+    thumbsUp: 33,
+    thumbsDown: 1,
+    views: 150,
+    searches: 50,
+    similarIds: ["noc-8"],
+    nextDoubtIds: ["noc-8"]
+  },
+  {
+    id: "noc-8",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "How do I download and upload the NOC?",
+    answer: "Log into the VINS portal, click 'Documents' tab, download the 'NOC Template.pdf', print it, get it signed, scan as a PDF, and upload it back on the same page. Max size is 5MB.",
+    urgencyScore: 30,
+    thumbsUp: 60,
+    thumbsDown: 2,
+    views: 230,
+    searches: 95,
+    similarIds: ["noc-4", "noc-7"],
+    nextDoubtIds: ["noc-3"]
+  },
+  {
+    id: "noc-9",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "What if my NOC is not formally verified?",
+    answer: "Verification takes 3-5 working days. If there are issues (wrong dates, poor scan, missing HOD seal), you will receive a notification and comments detailing how to re-submit.",
+    urgencyScore: 70,
+    thumbsUp: 55,
+    thumbsDown: 10,
+    views: 310,
+    searches: 175,
+    similarIds: ["noc-3"],
+    nextDoubtIds: ["noc-1"]
+  },
+  {
+    id: "noc-10",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "My online course (Masai, NPTEL, Coursera, etc.) won't issue an NOC. What do I do?",
+    answer: "Online platform certificates are not universities and cannot issue official NOCs. If you are doing these courses independently, upload a signed self-declaration stating you have time to pursue the internship alongside your courses.",
+    urgencyScore: 55,
+    thumbsUp: 48,
+    thumbsDown: 9,
+    views: 260,
+    searches: 130,
+    similarIds: ["noc-4"],
+    nextDoubtIds: ["noc-4"]
+  },
+  {
+    id: "noc-11",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "My HOD/college official wants written confirmation before signing my NOC. What do I show them?",
+    answer: "You can print and show them your official Samagama Offer Letter. The letter contains program structure, Dean signatures, and details of collaboration with IIT Ropar faculty.",
+    urgencyScore: 65,
+    thumbsUp: 70,
+    thumbsDown: 7,
+    views: 340,
+    searches: 180,
+    similarIds: ["noc-2", "selection-3"],
+    nextDoubtIds: ["selection-3"]
+  },
+  {
+    id: "noc-12",
+    section: "NOC Section",
+    sectionCode: "noc",
+    question: "Can Prof. Sudarshan Iyengar or a faculty member from IIT Ropar sign my NOC for the internship?",
+    answer: "No. IIT Ropar faculty co-supervise research but cannot sign your university's NOC. The NOC must be signed by officials from your *own* home college to declare they have no objection to your participation.",
+    urgencyScore: 80,
+    thumbsUp: 90,
+    thumbsDown: 14,
+    views: 430,
+    searches: 220,
+    similarIds: ["noc-2", "about-5"],
+    nextDoubtIds: ["about-5"]
+  },
+
+  // 4. Selection, offer letter, and certificate
+  {
+    id: "selection-1",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "How do I know I am selected?",
+    answer: "Selected candidates receive an official selection email from Samagama. Your status on the portal dashboard will also change from 'Applied' to 'Selected - Offer Issued'.",
+    urgencyScore: 40,
+    thumbsUp: 50,
+    thumbsDown: 2,
+    views: 240,
+    searches: 85,
+    similarIds: ["selection-3"],
+    nextDoubtIds: ["selection-3"]
+  },
+  {
+    id: "selection-2",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "How do I opt into VINS?",
+    answer: "Click the 'Accept Offer' link in your dashboard. You will be prompted with a choice between the VINS (Online) track and the VISE (Offline) track. Choose VINS and confirm your selection.",
+    urgencyScore: 50,
+    thumbsUp: 62,
+    thumbsDown: 4,
+    views: 275,
+    searches: 110,
+    similarIds: ["selection-11", "about-2"],
+    nextDoubtIds: ["about-2"]
+  },
+  {
+    id: "selection-3",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "When do I get the offer letter?",
+    answer: "Offer letters are generated dynamically within 24 hours of selection. You can download your offer letter PDF from the VINS onboarding screen.",
+    urgencyScore: 35,
+    thumbsUp: 40,
+    thumbsDown: 1,
+    views: 190,
+    searches: 60,
+    similarIds: ["selection-1", "selection-7"],
+    nextDoubtIds: ["selection-7"]
+  },
+  {
+    id: "selection-4",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "Will I get a certificate?",
+    answer: "Yes. Upon successful completion of all 3 phases and passing the final ViBe viva-voce evaluation, you will receive a digital certificate co-signed by Samagama program heads and supervising mentors.",
+    urgencyScore: 20,
+    thumbsUp: 58,
+    thumbsDown: 0,
+    views: 220,
+    searches: 55,
+    similarIds: ["about-1"],
+    nextDoubtIds: ["vibe-2"]
+  },
+  {
+    id: "selection-5",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "How do I confirm my internship dates?",
+    answer: "On the onboarding portal, you will be prompted to select your start and end dates from a drop-down menu. Confirming these dates locked them in for offer letter generation.",
+    urgencyScore: 30,
+    thumbsUp: 35,
+    thumbsDown: 2,
+    views: 180,
+    searches: 70,
+    similarIds: ["dates-1", "selection-8"],
+    nextDoubtIds: ["selection-8"]
+  },
+  {
+    id: "selection-6",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "I am a minor/major in AI student, can I join the programme? I don't need a NOC as I am from IIT Ropar.",
+    answer: "Students enrolled in IIT Ropar minor/major courses are exempt from submitting home-college NOCs. Upload a copy of your IIT Ropar student ID card in the NOC upload slot to verify exemption status.",
+    urgencyScore: 65,
+    thumbsUp: 72,
+    thumbsDown: 8,
+    views: 310,
+    searches: 155,
+    similarIds: ["noc-12", "about-5"],
+    nextDoubtIds: ["about-5"]
+  },
+  {
+    id: "selection-7",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "How do I accept the offer letter?",
+    answer: "Click the 'Accept Offer' button, digitally sign the declaration form, and submit. Ensure you accept within 5 days of issue to reserve your seat in the cohort.",
+    urgencyScore: 25,
+    thumbsUp: 45,
+    thumbsDown: 0,
+    views: 160,
+    searches: 45,
+    similarIds: ["selection-3"],
+    nextDoubtIds: ["noc-8"]
+  },
+  {
+    id: "selection-8",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "Can I change my internship dates?",
+    answer: "Before accepting the offer, you can change your dates on the onboarding dashboard. Once accepted and NOC is uploaded, dates are locked and can only be modified by raising a support ticket.",
+    urgencyScore: 70,
+    thumbsUp: 60,
+    thumbsDown: 11,
+    views: 330,
+    searches: 185,
+    similarIds: ["selection-5", "selection-12", "dates-3"],
+    nextDoubtIds: ["dates-3"]
+  },
+  {
+    id: "selection-9",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "My NOC is not ready but my start date is approaching. What do I do?",
+    answer: "You can start Phase 1 (coursework) on time even if your NOC verification is pending. However, you must upload the NOC before Phase 2 starts, or your project allocation will be withheld.",
+    urgencyScore: 82,
+    thumbsUp: 77,
+    thumbsDown: 16,
+    views: 400,
+    searches: 215,
+    similarIds: ["noc-3", "dates-1"],
+    nextDoubtIds: ["noc-3"]
+  },
+  {
+    id: "selection-10",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "When does my internship actually begin? Will I receive a notification on the day?",
+    answer: "You will receive an onboarding email containing LMS credentials and Zoom links on the morning of your chosen start date. Ensure you monitor your spam folder.",
+    urgencyScore: 40,
+    thumbsUp: 50,
+    thumbsDown: 3,
+    views: 220,
+    searches: 75,
+    similarIds: ["dates-1", "phase1-5"],
+    nextDoubtIds: ["phase1-5"]
+  },
+  {
+    id: "selection-11",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "Can I switch from VINS (online) to VISE (offline) after being selected?",
+    answer: "Switches are highly restricted due to laboratory capacity limits at IIT Ropar. Submit a formal request to the coordinator desk. Approvals depend on seat vacancies and merit criteria.",
+    urgencyScore: 68,
+    thumbsUp: 45,
+    thumbsDown: 9,
+    views: 290,
+    searches: 140,
+    similarIds: ["selection-2"],
+    nextDoubtIds: ["selection-2"]
+  },
+  {
+    id: "selection-12",
+    section: "Selection & Offer Letter",
+    sectionCode: "selection",
+    question: "Can I change my internship dates after the offer letter?",
+    answer: "Once the offer letter is generated, date changes require re-issuance. Raise a ticket under 'Date Modification Requests'. Note that HOD must verify the new dates before approval.",
+    urgencyScore: 72,
+    thumbsUp: 53,
+    thumbsDown: 13,
+    views: 310,
+    searches: 160,
+    similarIds: ["selection-8", "dates-3"],
+    nextDoubtIds: ["dates-3"]
+  },
+
+  // 5. Work, mentorship, and projects
+  {
+    id: "work-1",
+    section: "Work & Mentorship",
+    sectionCode: "work",
+    question: "What will I work on?",
+    answer: "Projects range from developing machine learning classifiers and core natural language processing tools (like Yaksha Chat integrations) to writing robust full-stack web architectures.",
+    urgencyScore: 15,
+    thumbsUp: 35,
+    thumbsDown: 0,
+    views: 150,
+    searches: 35,
+    similarIds: ["about-1", "work-3"],
+    nextDoubtIds: ["work-3"]
+  },
+  {
+    id: "work-2",
+    section: "Work & Mentorship",
+    sectionCode: "work",
+    question: "How many hours per day?",
+    answer: "We recommend dedicating 6-8 hours daily to maintain progression standards, participate in live check-ins, and complete milestones on time.",
+    urgencyScore: 25,
+    thumbsUp: 48,
+    thumbsDown: 3,
+    views: 180,
+    searches: 55,
+    similarIds: ["dates-2"],
+    nextDoubtIds: ["dates-2"]
+  },
+  {
+    id: "work-3",
+    section: "Work & Mentorship",
+    sectionCode: "work",
+    question: "Who is my mentor?",
+    answer: "You will be assigned a project mentor at the start of Phase 2. Mentors are senior engineering leads from Samagama or research scholars working under collaborating IIT Ropar faculty.",
+    urgencyScore: 20,
+    thumbsUp: 42,
+    thumbsDown: 1,
+    views: 160,
+    searches: 45,
+    similarIds: ["work-1"],
+    nextDoubtIds: ["work-1"]
+  },
+  {
+    id: "work-4",
+    section: "Work & Mentorship",
+    sectionCode: "work",
+    question: "Is there a stipend?",
+    answer: "VINS is a learning and research training program, which is unpaid. Select high-impact research projects that result in publication or deployment may receive token academic awards.",
+    urgencyScore: 50,
+    thumbsUp: 38,
+    thumbsDown: 12,
+    views: 310,
+    searches: 180,
+    similarIds: ["about-1"],
+    nextDoubtIds: ["about-1"]
+  },
+  {
+    id: "work-5",
+    section: "Work & Mentorship",
+    sectionCode: "work",
+    question: "Do I need my own laptop? Should I preload any software?",
+    answer: "Yes, you must have your own computer with a stable internet connection. No initial software is required; coding environments are hosted on cloud containers accessible via browser.",
+    urgencyScore: 18,
+    thumbsUp: 40,
+    thumbsDown: 0,
+    views: 130,
+    searches: 40,
+    similarIds: ["phase1-2"],
+    nextDoubtIds: ["phase1-2"]
+  },
+  {
+    id: "work-6",
+    section: "Work & Mentorship",
+    sectionCode: "work",
+    question: "I am using a different email on GitHub / Zoom / the learning platform. Is that okay?",
+    answer: "We strongly recommend using the email associated with your Samagama registration across all platforms to ensure participation tracking and Spurti Points are synchronized automatically.",
+    urgencyScore: 55,
+    thumbsUp: 62,
+    thumbsDown: 8,
+    views: 290,
+    searches: 120,
+    similarIds: ["phase1-3", "phase1-7"],
+    nextDoubtIds: ["phase1-3"]
+  },
+
+  // 10. Phase 1 - coursework, Vibe LMS, and live sessions
+  {
+    id: "phase1-1",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "I've already completed a course (Vinternship, Pinternship, MERN, or AI) with you in an earlier cohort — am I exempt from repeating it?",
+    answer: "Yes! If you completed matching course tracks in the past 12 months, submit your certificate via the VINS portal. Once verified, you will be exempted and granted equivalent credits.",
+    urgencyScore: 65,
+    thumbsUp: 54,
+    thumbsDown: 9,
+    views: 280,
+    searches: 140,
+    similarIds: ["about-3"],
+    nextDoubtIds: ["about-3"]
+  },
+  {
+    id: "phase1-2",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "How do I register for the AI Fundamentals course on Vibe?",
+    answer: "Your credentials will be emailed to you on start day. Log in to vibe.samagama.edu, locate the 'My Courses' panel, and register for 'AI Fundamentals' with one-click enrollment.",
+    urgencyScore: 30,
+    thumbsUp: 45,
+    thumbsDown: 2,
+    views: 195,
+    searches: 60,
+    similarIds: ["vibe-1"],
+    nextDoubtIds: ["vibe-1"]
+  },
+  {
+    id: "phase1-3",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "I registered on Vibe with a different email than my Samagama email — is that OK?",
+    answer: "No. If emails do not match, your course progression cannot be tracked by our system, resulting in zero Spurti Points. Please update your email profile on Vibe immediately.",
+    urgencyScore: 50,
+    thumbsUp: 40,
+    thumbsDown: 7,
+    views: 220,
+    searches: 95,
+    similarIds: ["work-6"],
+    nextDoubtIds: ["work-6"]
+  },
+  {
+    id: "phase1-4",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "Are live sessions mandatory if I'm on the viva route?",
+    answer: "Live sessions are mandatory. Attendance accounts for 15% of your final evaluation. Missing live streams without approved excuses decreases your Spurti Points.",
+    urgencyScore: 60,
+    thumbsUp: 55,
+    thumbsDown: 10,
+    views: 290,
+    searches: 135,
+    similarIds: ["phase1-12", "spurti-4"],
+    nextDoubtIds: ["phase1-12"]
+  },
+  {
+    id: "phase1-5",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "When and how do I get the Zoom link for the kickoff meeting?",
+    answer: "The Zoom kickoff link is sent via email and pinned in the Slack channel announcements 24 hours before the event. It is also displayed in the VINS notification tray.",
+    urgencyScore: 45,
+    thumbsUp: 60,
+    thumbsDown: 3,
+    views: 210,
+    searches: 85,
+    similarIds: ["dates-6", "phase1-6"],
+    nextDoubtIds: ["phase1-6"]
+  },
+  {
+    id: "phase1-6",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "How do I get the link for the daily Zoom standups? Are they mandatory?",
+    answer: "Daily standup links are posted in your dedicated project channel. Attendance is mandatory to report progress and discuss blocking tasks with your mentor.",
+    urgencyScore: 40,
+    thumbsUp: 48,
+    thumbsDown: 2,
+    views: 185,
+    searches: 70,
+    similarIds: ["phase1-5", "phase1-4"],
+    nextDoubtIds: ["phase1-4"]
+  },
+  {
+    id: "phase1-7",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "How do I provide my Zoom ID, and why does it matter?",
+    answer: "Submit your Zoom email/ID inside VINS profile settings. We run automated script logs on Zoom participant lists to track attendance and allocate Spurti Points.",
+    urgencyScore: 35,
+    thumbsUp: 42,
+    thumbsDown: 1,
+    views: 160,
+    searches: 55,
+    similarIds: ["phase1-8", "work-6"],
+    nextDoubtIds: ["phase1-8"]
+  },
+  {
+    id: "phase1-8",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "I saved the wrong Zoom ID — can I change it?",
+    answer: "Yes, you can edit your Zoom ID in VINS profile settings. Attendance logs will re-process and synchronize your missing attendance points within 24 hours.",
+    urgencyScore: 30,
+    thumbsUp: 38,
+    thumbsDown: 0,
+    views: 125,
+    searches: 40,
+    similarIds: ["phase1-7"],
+    nextDoubtIds: ["phase1-7"]
+  },
+  {
+    id: "phase1-9",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "Can we register and start the vibe courses before our internship date formally starts?",
+    answer: "Course access is restricted until onboarding day to ensure cohort synchronization. However, preliminary Git and Linux tutorials are open in pre-internship modules.",
+    urgencyScore: 25,
+    thumbsUp: 50,
+    thumbsDown: 2,
+    views: 175,
+    searches: 50,
+    similarIds: ["dates-1", "phase1-2"],
+    nextDoubtIds: ["phase1-2"]
+  },
+  {
+    id: "phase1-10",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "What are the attendance and participation rules?",
+    answer: "You must maintain a minimum attendance of 85% in live meetings, complete all course modules by the phase deadline, and achieve a Spurti score above 70.",
+    urgencyScore: 55,
+    thumbsUp: 64,
+    thumbsDown: 7,
+    views: 260,
+    searches: 110,
+    similarIds: ["phase1-4", "spurti-4"],
+    nextDoubtIds: ["spurti-4"]
+  },
+  {
+    id: "phase1-11",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "What are Spurti Points (SP)? Do they affect my internship?",
+    answer: "Spurti Points measure engagement. Points are gained through course completions, daily standups, and live stream polls. Your final grade and eligibility for certificates are determined by SP.",
+    urgencyScore: 50,
+    thumbsUp: 78,
+    thumbsDown: 6,
+    views: 290,
+    searches: 130,
+    similarIds: ["spurti-1", "spurti-3"],
+    nextDoubtIds: ["spurti-1"]
+  },
+  {
+    id: "phase1-12",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "What are the live-session (Zoom) participation and conduct rules?",
+    answer: "Ensure cameras are on during Q&A rounds, keep microphones muted during lectures, and actively answer interactive live polls. Abusive behavior will cause termination.",
+    urgencyScore: 20,
+    thumbsUp: 45,
+    thumbsDown: 1,
+    views: 130,
+    searches: 35,
+    similarIds: ["phase1-4"],
+    nextDoubtIds: ["phase1-4"]
+  },
+  {
+    id: "phase1-13",
+    section: "Phase 1 & LMS Coursework",
+    sectionCode: "phase1",
+    question: "I got 'Failed to submit poll. Error: 100035000' during a session — what does it mean, and will I lose poll credit?",
+    answer: "This is a network timeout error on Zoom server endpoints. Don't worry; message the session host or your mentor directly with your responses, and they will manually add your SP points.",
+    urgencyScore: 88,
+    thumbsUp: 60,
+    thumbsDown: 24,
+    views: 410,
+    searches: 280,
+    similarIds: ["phase1-11", "chat-1"],
+    nextDoubtIds: ["chat-1"]
+  },
+
+  // 11. Spurti Points
+  {
+    id: "spurti-1",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "What are Spurti Points?",
+    answer: "Spurti Points (SP) are engagement points that track your daily participation. Points are earned through course progress, forum activity, standup attendance, and project commits.",
+    urgencyScore: 20,
+    thumbsUp: 55,
+    thumbsDown: 2,
+    views: 210,
+    searches: 65,
+    similarIds: ["phase1-11", "spurti-11"],
+    nextDoubtIds: ["spurti-11"]
+  },
+  {
+    id: "spurti-2",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "Is SP a finished system?",
+    answer: "Yes, Spurti is our production tracking engine. Points are calculated continuously and display on your dashboard. Features are updated based on student feedback.",
+    urgencyScore: 15,
+    thumbsUp: 38,
+    thumbsDown: 1,
+    views: 140,
+    searches: 40,
+    similarIds: ["spurti-1"],
+    nextDoubtIds: ["spurti-3"]
+  },
+  {
+    id: "spurti-3",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "How much importance should I give to my SP number?",
+    answer: "Give it high priority! High-performing internships, reference letters, and project grading honors are strictly filtered by your final Spurti Points tally.",
+    urgencyScore: 45,
+    thumbsUp: 50,
+    thumbsDown: 5,
+    views: 220,
+    searches: 90,
+    similarIds: ["spurti-1", "spurti-6"],
+    nextDoubtIds: ["spurti-6"]
+  },
+  {
+    id: "spurti-4",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "Can I be terminated or excused because of low SP?",
+    answer: "Yes. Falling below 40 SP for 2 consecutive weeks without an approved medical excuse triggers a review and can lead to termination of your internship.",
+    urgencyScore: 88,
+    thumbsUp: 95,
+    thumbsDown: 26,
+    views: 490,
+    searches: 310,
+    similarIds: ["spurti-10", "phase1-10"],
+    nextDoubtIds: ["spurti-10"]
+  },
+  {
+    id: "spurti-5",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "What if my SP shows as zero or even negative?",
+    answer: "Zeros happen if you haven't linked platform emails correctly or missed onboarding actions. Negative values occur as penalties for missing mandatory standups without leave approvals.",
+    urgencyScore: 78,
+    thumbsUp: 64,
+    thumbsDown: 18,
+    views: 390,
+    searches: 210,
+    similarIds: ["work-6", "phase1-3"],
+    nextDoubtIds: ["work-6"]
+  },
+  {
+    id: "spurti-6",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "Does a higher SP bring any benefits?",
+    answer: "Yes! The top 10% of cohort performers receive 'Excellent Performance Letters' directly from the Dean and are invited for physical research interviews at IIT Ropar.",
+    urgencyScore: 30,
+    thumbsUp: 68,
+    thumbsDown: 1,
+    views: 190,
+    searches: 55,
+    similarIds: ["spurti-3"],
+    nextDoubtIds: ["spurti-3"]
+  },
+  {
+    id: "spurti-7",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "If SP does not determine outcomes, what does?",
+    answer: "Spurti determines qualification and final rankings. However, your project mentor's review (50%) and your ViBe presentation grade (30%) decide pass/fail outcomes.",
+    urgencyScore: 35,
+    thumbsUp: 46,
+    thumbsDown: 3,
+    views: 165,
+    searches: 45,
+    similarIds: ["spurti-3", "vibe-2"],
+    nextDoubtIds: ["vibe-2"]
+  },
+  {
+    id: "spurti-8",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "What are the participation requirements tracked strictly?",
+    answer: "We track standup check-ins, LMS video play metrics, coding activity in cloud work environments, and live session poll submissions.",
+    urgencyScore: 25,
+    thumbsUp: 40,
+    thumbsDown: 0,
+    views: 135,
+    searches: 38,
+    similarIds: ["phase1-10"],
+    nextDoubtIds: ["phase1-10"]
+  },
+  {
+    id: "spurti-9",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "What does 'rolling basis' mean?",
+    answer: "Rollings refer to calculations processed hourly. Changes to code repositories and course video logs take up to 2 hours to reflect on your Spurti status board.",
+    urgencyScore: 10,
+    thumbsUp: 29,
+    thumbsDown: 0,
+    views: 90,
+    searches: 20,
+    similarIds: ["spurti-2"],
+    nextDoubtIds: ["spurti-2"]
+  },
+  {
+    id: "spurti-10",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "What happens if I fall below the required participation level?",
+    answer: "If your SP drops below 50, a warning alert displays on VINS. A support representative will coordinate with you to address project barriers before disciplinary audits occur.",
+    urgencyScore: 70,
+    thumbsUp: 80,
+    thumbsDown: 14,
+    views: 350,
+    searches: 175,
+    similarIds: ["spurti-4"],
+    nextDoubtIds: ["spurti-4"]
+  },
+  {
+    id: "spurti-11",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "How are Spurti Points calculated?",
+    answer: "SP = (LMS Coursework % * 2) + (Standup attendance * 1.5) + (Zoom Poll replies * 1) + (Git Commits * 3) - Penalties (late uploads, missed standups).",
+    urgencyScore: 20,
+    thumbsUp: 48,
+    thumbsDown: 1,
+    views: 180,
+    searches: 50,
+    similarIds: ["spurti-1"],
+    nextDoubtIds: ["spurti-1"]
+  },
+  {
+    id: "spurti-12",
+    section: "Spurti Points System",
+    sectionCode: "spurti",
+    question: "Can the programme team award or deduct SP directly?",
+    answer: "Yes, mentors and organizers can add buffer points for exceptional design or deduct points manually for code plagiarisms or violations of live session rules.",
+    urgencyScore: 40,
+    thumbsUp: 35,
+    thumbsDown: 6,
+    views: 160,
+    searches: 42,
+    similarIds: ["spurti-5"],
+    nextDoubtIds: ["spurti-5"]
+  },
+
+  // 12. Yaksha Chat Related
+  {
+    id: "chat-1",
+    section: "Yaksha Chat Helper",
+    sectionCode: "chat",
+    question: "I'm unable to type in the chat after clicking 'Interact with Yaksha' — what should I do?",
+    answer: "This is a rare focus bug. Click outside the widget to close it, refresh the page, and open it again. Ensure your browser is updated and adblockers are disabled on samagama.edu.",
+    urgencyScore: 82,
+    thumbsUp: 50,
+    thumbsDown: 19,
+    views: 360,
+    searches: 210,
+    similarIds: ["phase1-13", "vibe-3"],
+    nextDoubtIds: ["vibe-3"]
+  },
+
+  // 13. ViBe Platform
+  {
+    id: "vibe-1",
+    section: "ViBe Platform & Exams",
+    sectionCode: "vibe",
+    question: "How do I log in to ViBe?",
+    answer: "Access the viva portal at vibe.samagama.edu. Log in using your registered VINS student email and credentials sent during Phase 3 onboarding.",
+    urgencyScore: 30,
+    thumbsUp: 45,
+    thumbsDown: 2,
+    views: 180,
+    searches: 60,
+    similarIds: ["phase1-2", "vibe-2"],
+    nextDoubtIds: ["vibe-2"]
+  },
+  {
+    id: "vibe-2",
+    section: "ViBe Platform & Exams",
+    sectionCode: "vibe",
+    question: "Invite accepted but shows 'No course enrolled'?",
+    answer: "It takes 24 hours to map course structures after you accept. If it continues to display blank screens, email support.vibe@samagama.edu with your roll number.",
+    urgencyScore: 65,
+    thumbsUp: 48,
+    thumbsDown: 9,
+    views: 270,
+    searches: 130,
+    similarIds: ["vibe-1", "vibe-3"],
+    nextDoubtIds: ["vibe-3"]
+  },
+  {
+    id: "vibe-3",
+    section: "ViBe Platform & Exams",
+    sectionCode: "vibe",
+    question: "Why are videos stuck or repeating?",
+    answer: "This is caused by video buffer sync issues. Toggle HTML5 hardware acceleration in your browser settings, clear your web cache, or switch to Google Chrome.",
+    urgencyScore: 78,
+    thumbsUp: 55,
+    thumbsDown: 15,
+    views: 340,
+    searches: 190,
+    similarIds: ["vibe-5", "chat-1"],
+    nextDoubtIds: ["vibe-5"]
+  },
+  {
+    id: "vibe-4",
+    section: "ViBe Platform & Exams",
+    sectionCode: "vibe",
+    question: "Can I use a mobile or tablet?",
+    answer: "Yes, ViBe is responsive. However, for live presentations and final Viva-Voce exams, you MUST use a desktop/laptop with a functional webcam and microphone.",
+    urgencyScore: 25,
+    thumbsUp: 40,
+    thumbsDown: 0,
+    views: 120,
+    searches: 35,
+    similarIds: ["work-5"],
+    nextDoubtIds: ["work-5"]
+  },
+  {
+    id: "vibe-5",
+    section: "ViBe Platform & Exams",
+    sectionCode: "vibe",
+    question: "I'm experiencing video issues (stuck, looping, skipping) on ViBe. How do I...",
+    answer: "Ensure your internet download speed is above 5 Mbps. Lower video resolution to 480p inside the player, or try another CDN mirror route from the player settings drawer.",
+    urgencyScore: 75,
+    thumbsUp: 60,
+    thumbsDown: 14,
+    views: 310,
+    searches: 165,
+    similarIds: ["vibe-3"],
+    nextDoubtIds: ["vibe-3"]
+  }
 ];
 
-// Typo fuzzy suggestions mapping
-const TYPO_MAP = {
-  'ncc': { correct: 'NOC', query: 'noc' },
-  'nod': { correct: 'NOC', query: 'noc' },
-  'intren': { correct: 'Internship', query: 'internship' },
-  'internshpi': { correct: 'Internship', query: 'internship' },
-  'vibe': { correct: 'ViBe', query: 'vibe' },
-  'viba': { correct: 'ViBe', query: 'vibe' },
-  'roseta': { correct: 'Rosetta', query: 'rosetta' },
-  'rosetea': { correct: 'Rosetta', query: 'rosetta' }
-};
-
-// Initialize Application
-document.addEventListener('DOMContentLoaded', () => {
-  loadState();
-  initTheme();
-  setupEventListeners();
-  renderAll();
-  switchSubNav(currentSubNav);
-  
-  // Show initial bot greeting if history is empty
-  if (chatbotHistory.length === 0) {
-    addBotMessage("Greetings! I am **Yaksha Mini**, your AI FAQ assistant. Ask me anything about VINS onboarding, NOC dates, Spurti calculations, or ViBe logins!");
-    updateChatbotUnread(true);
-  } else {
-    renderChatHistory();
-  }
-});
-
-// Load state from localStorage or use initial presets
-function loadState() {
-  const savedFaq = localStorage.getItem('samagama_faq');
-  const savedSuggestions = localStorage.getItem('samagama_suggestions');
-  const savedTheme = localStorage.getItem('samagama_theme');
-  const savedView = localStorage.getItem('samagama_view');
-  const savedRead = localStorage.getItem('samagama_read');
-  const savedHistory = localStorage.getItem('samagama_chat_history');
-  const savedPanic = localStorage.getItem('samagama_panic');
-  const savedVoice = localStorage.getItem('samagama_voice_issues');
-  const savedOverrides = localStorage.getItem('samagama_overrides');
-
-  faqData = savedFaq ? JSON.parse(savedFaq) : [...INITIAL_FAQ_DATA];
-  suggestions = savedSuggestions ? JSON.parse(savedSuggestions) : [...INITIAL_SELF_HEALING_SUGGESTIONS];
-  currentTheme = savedTheme || 'light'; // Default to light mode (warm cream)
-  currentView = savedView || 'student';
-  panicMode = savedPanic === 'true';
-  urgencyOverrides = savedOverrides ? JSON.parse(savedOverrides) : {};
-  
-  if (savedRead) {
-    readSections = new Set(JSON.parse(savedRead));
-  } else {
-    readSections = new Set();
-  }
-
-  chatbotHistory = savedHistory ? JSON.parse(savedHistory) : [];
-  
-  voiceIssuesData = savedVoice ? JSON.parse(savedVoice) : [
-    { id: 'v-1', text: "Unable to submit Zoom session polls (Error 100035000)", upvotes: 142, category: 'vibe', upvoted: false },
-    { id: 'v-2', text: "Video loading issues on Vibe LMS platform", upvotes: 85, category: 'coursework', upvoted: false },
-    { id: 'v-3', text: "Delay in NOC verifications from local university placement cells", upvotes: 60, category: 'noc', upvoted: false },
-    { id: 'v-4', text: "Spurti Points not synchronizing after Git commits to private repos", upvotes: 32, category: 'spurti', upvoted: false }
-  ];
-
-  // Inject and enforce exact trending stats to match screenshot
-  const trendingEnforcements = [
-    { id: 'noc-announce', question: 'When will NOC dates be announced?', answer: 'The official dates for the Vicharanashala internship cohorts are announced in the onboarding handbook. Typically, NOC submission verification starts from June 20, and all approvals must be completed by July 10, 2026.', section: 'NOC Section', sectionCode: 'noc', searches: 258, weeklySearches: 258, trendDelta: 230, urgencyScore: 92 },
-    { id: 'noc-1', searches: 96, weeklySearches: 96, trendDelta: 74 },
-    { id: 'noc-6', searches: 73, weeklySearches: 73, trendDelta: 54 },
-    { id: 'vibe-2', searches: 58, weeklySearches: 58, trendDelta: 46 },
-    { id: 'noc-2', searches: 41, weeklySearches: 41, trendDelta: 3 }
-  ];
-
-  // Cap all other search values to a maximum of 35 so enforced ones are the top 5
-  faqData.forEach(faq => {
-    if (!['noc-announce', 'noc-1', 'noc-6', 'vibe-2', 'noc-2'].includes(faq.id)) {
-      faq.searches = Math.min(faq.searches, 35);
-    }
-  });
-
-  // Apply or inject enforcements
-  trendingEnforcements.forEach(enforce => {
-    let faq = faqData.find(f => f.id === enforce.id);
-    if (!faq) {
-      faq = {
-        id: enforce.id,
-        section: enforce.section,
-        sectionCode: enforce.sectionCode,
-        question: enforce.question,
-        answer: enforce.answer,
-        urgencyScore: enforce.urgencyScore || 30,
-        thumbsUp: 10,
-        thumbsDown: 0,
-        views: enforce.searches * 1.5,
-        similarIds: ['noc-1', 'noc-2'],
-        nextDoubtIds: ['noc-2']
-      };
-      faqData.push(faq);
-    }
-    faq.searches = enforce.searches;
-    faq.weeklySearches = enforce.weeklySearches;
-    faq.trendDelta = enforce.trendDelta;
-    if (enforce.urgencyScore) faq.urgencyScore = enforce.urgencyScore;
-  });
-
-  // Parse session and apply role-based configuration
-  const sessionStr = localStorage.getItem('samagama_session');
-  if (sessionStr) {
-    const session = JSON.parse(sessionStr);
-    const displayEmail = document.getElementById('user-display-email');
-    if (displayEmail) {
-      displayEmail.innerText = `${session.role.toUpperCase()}: ${session.email}`;
-      displayEmail.style.display = 'inline-block';
-    }
-    
-    if (session.role === 'student') {
-      currentView = 'student';
-      const adminBtn = document.getElementById('view-admin-btn');
-      if (adminBtn) {
-        adminBtn.style.display = 'none';
-      }
-    }
-  }
-}
-
-// Save state to localStorage
-function saveState() {
-  localStorage.setItem('samagama_faq', JSON.stringify(faqData));
-  localStorage.setItem('samagama_suggestions', JSON.stringify(suggestions));
-  localStorage.setItem('samagama_theme', currentTheme);
-  localStorage.setItem('samagama_view', currentView);
-  localStorage.setItem('samagama_read', JSON.stringify([...readSections]));
-  localStorage.setItem('samagama_chat_history', JSON.stringify(chatbotHistory));
-  localStorage.setItem('samagama_panic', panicMode);
-  localStorage.setItem('samagama_voice_issues', JSON.stringify(voiceIssuesData));
-  localStorage.setItem('samagama_overrides', JSON.stringify(urgencyOverrides));
-}
-
-// Initialize Theme UI
-function initTheme() {
-  document.documentElement.setAttribute('data-theme', currentTheme);
-  updateThemeButtonIcon();
-}
-
-// Update Theme Toggle icon based on state
-function updateThemeButtonIcon() {
-  const themeBtn = document.getElementById('theme-toggle');
-  if (themeBtn) {
-    themeBtn.innerHTML = currentTheme === 'dark' ? '☀️' : '🌙';
-  }
-}
-
-// Main Render Function
-function renderAll() {
-  renderPanicBanner();
-  renderFaqGrid();
-  renderCategorySidebar();
-  renderProgressStrip();
-  renderTrendingList();
-  renderAdminHeatmap();
-  renderDoubtClusterMap();
-  renderAdminSuggestions();
-  renderSimulationState();
-  populateOverrideFaqSelect();
-  updateViewToggleUI();
-}
-
-// Toggle View (Student / Admin)
-function toggleView(view) {
-  currentView = view;
-  saveState();
-  
-  const studentView = document.getElementById('student-view-container');
-  const adminView = document.getElementById('admin-view-container');
-  
-  if (view === 'student') {
-    studentView.style.display = 'block';
-    adminView.style.display = 'none';
-  } else {
-    studentView.style.display = 'none';
-    adminView.style.display = 'block';
-    renderAdminHeatmap();
-    renderDoubtClusterMap();
-    populateOverrideFaqSelect();
-  }
-  updateViewToggleUI();
-}
-
-function updateViewToggleUI() {
-  const studentBtn = document.getElementById('view-student-btn');
-  const adminBtn = document.getElementById('view-admin-btn');
-  if (studentBtn && adminBtn) {
-    studentBtn.classList.toggle('active', currentView === 'student');
-    adminBtn.classList.toggle('active', currentView === 'admin');
-  }
-  
-  const studentView = document.getElementById('student-view-container');
-  const adminView = document.getElementById('admin-view-container');
-  if (currentView === 'student') {
-    studentView.style.display = 'block';
-    adminView.style.display = 'none';
-  } else {
-    studentView.style.display = 'none';
-    adminView.style.display = 'block';
-  }
-}
-
-// Theme Toggle trigger
-function toggleTheme() {
-  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', currentTheme);
-  saveState();
-  updateThemeButtonIcon();
-  
-  if (currentView === 'admin') {
-    renderDoubtClusterMap();
-  }
-}
-
-// Render the Critical Panic Mode Banner if active
-function renderPanicBanner() {
-  const banner = document.getElementById('panic-banner');
-  if (panicMode) {
-    banner.style.display = 'flex';
-  } else {
-    banner.style.display = 'none';
-  }
-}
-
-// Dismiss Panic alert manually
-function dismissPanic() {
-  document.getElementById('panic-banner').style.display = 'none';
-}
-
-// Render category filtering sidebar
-function renderCategorySidebar() {
-  const sidebar = document.getElementById('category-sidebar');
-  if (!sidebar) return;
-  
-  const categories = [
-    { code: 'all', name: 'All Topics' },
-    { code: 'noc', name: 'NOC Section' },
-    { code: 'internship', name: 'Internship Allocation' },
-    { code: 'vibe', name: 'ViBe Viva-Voce' },
-    { code: 'rosetta', name: 'Rosetta Academy' }
-  ];
-  
-  let html = '';
-  categories.forEach(cat => {
-    let count = 0;
-    if (cat.code === 'all') {
-      count = faqData.length;
-    } else {
-      count = faqData.filter(faq => faq.sectionCode === cat.code).length;
-    }
-    
-    const isActive = activeCategory === cat.code ? 'active' : '';
-    html += `
-      <button class="category-btn ${isActive}" onclick="setCategory('${cat.code}')">
-        <span>${cat.name}</span>
-        <span class="category-count">${count}</span>
-      </button>
-    `;
-  });
-  
-  sidebar.innerHTML = html;
-}
-
-// Set Active Category filter
-function setCategory(catCode) {
-  activeCategory = catCode;
-  renderFaqGrid();
-  renderCategorySidebar();
-}
-
-// Compute urgency score for FAQs dynamically
-function getComputedUrgency(faq) {
-  // 1. Check for manual override first
-  if (urgencyOverrides[faq.id] && urgencyOverrides[faq.id].level !== 'auto') {
-    const level = urgencyOverrides[faq.id].level;
-    if (level === 'critical') return 100;
-    if (level === 'high') return 80;
-    if (level === 'medium') return 50;
-    if (level === 'low') return 20;
-  }
-
-  let score = faq.urgencyScore;
-  
-  // NOC gets a panic bump if panicMode is active
-  if (panicMode && faq.sectionCode === 'noc') {
-    score = Math.max(score, 98); // Force high critical urgency
-  }
-  
-  const votePenalty = faq.thumbsDown * 15;
-  const searchWeight = Math.floor(faq.searches / 15);
-  
-  return Math.min(100, Math.max(0, score + votePenalty + searchWeight));
-}
-
-// Populate the FAQ select list inside Admin urgency override console
-function populateOverrideFaqSelect() {
-  const select = document.getElementById('override-faq-select');
-  if (!select) return;
-  
-  let html = '<option value="">-- Choose an FAQ Question --</option>';
-  // Sort alphabetically
-  const sortedFaqs = [...faqData].sort((a, b) => a.question.localeCompare(b.question));
-  sortedFaqs.forEach(faq => {
-    html += `<option value="${faq.id}">${faq.question.substring(0, 70)}${faq.question.length > 70 ? '...' : ''}</option>`;
-  });
-  select.innerHTML = html;
-}
-
-// Handle override form submits
-function handleUrgencyOverride(event) {
-  event.preventDefault();
-  const select = document.getElementById('override-faq-select');
-  const levelSelect = document.getElementById('override-level');
-  const noteInput = document.getElementById('override-note');
-  
-  if (!select || !levelSelect || !noteInput) return;
-  
-  const faqId = select.value;
-  const level = levelSelect.value;
-  const note = noteInput.value.trim();
-  
-  if (!faqId) {
-    alert("Please select an FAQ to override.");
-    return;
-  }
-  
-  if (level === 'auto') {
-    delete urgencyOverrides[faqId];
-  } else {
-    urgencyOverrides[faqId] = {
-      level: level,
-      note: note || (level === 'critical' ? 'Updated policy — read before applying' : '')
-    };
-  }
-  
-  saveState();
-  renderAll();
-  
-  // Show confirmation alert
-  alert("Urgency override applied successfully!");
-  noteInput.value = '';
-  select.value = '';
-  levelSelect.value = 'auto';
-}
-
-// Render the FAQ list based on filters
-function renderFaqGrid() {
-  const faqGrid = document.getElementById('faq-grid');
-  if (!faqGrid) return;
-  
-  let list = faqData;
-  if (activeCategory !== 'all') {
-    list = faqData.filter(faq => faq.sectionCode === activeCategory);
-  }
-  
-  if (searchQuery.trim() !== '') {
-    const q = searchQuery.toLowerCase();
-    list = list.filter(faq => 
-      faq.question.toLowerCase().includes(q) || 
-      faq.answer.toLowerCase().includes(q) || 
-      faq.section.toLowerCase().includes(q)
-    );
-  }
-  
-  // Sort by urgency descending (Critical/overrides float to top automatically)
-  list.sort((a, b) => getComputedUrgency(b) - getComputedUrgency(a));
-  
-  if (list.length === 0) {
-    faqGrid.innerHTML = `
-      <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
-        <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">🕵️ No results found</p>
-        <p style="font-size: 0.9rem;">Try matching key phrases like "NOC status" or "ViBe registration".</p>
-      </div>
-    `;
-    return;
-  }
-  
-  let html = '';
-  list.forEach(faq => {
-    const urgency = getComputedUrgency(faq);
-    let priorityClass = 'low';
-    let priorityLabel = 'Low Urgency';
-    
-    if (urgency >= 85) {
-      priorityClass = 'critical';
-      priorityLabel = 'Critical';
-    } else if (urgency >= 60) {
-      priorityClass = 'high';
-      priorityLabel = 'High';
-    } else if (urgency >= 30) {
-      priorityClass = 'medium';
-      priorityLabel = 'Medium';
-    }
-    
-    const readIndicator = readSections.has(faq.id) ? '✓ Read' : 'Unread';
-    const override = urgencyOverrides[faq.id];
-    let overrideBannerHtml = '';
-    
-    if (override && override.level !== 'auto' && override.note) {
-      overrideBannerHtml = `
-        <div class="faq-override-banner">
-          <span>🚨</span> <strong>Note:</strong> ${override.note}
-        </div>
-      `;
-    }
-    
-    html += `
-      <div class="faq-card ${priorityClass}" onclick="openFaqPopup('${faq.id}')">
-        <div class="faq-card-content">
-          <div class="faq-card-meta">
-            <span class="faq-card-badge">${priorityLabel}</span>
-            <span>${faq.section}</span>
-            <span>&bull;</span>
-            <span style="color: ${readSections.has(faq.id) ? 'var(--urgency-low)' : 'var(--text-muted)'}; font-weight: 500;">${readIndicator}</span>
-          </div>
-          <div class="faq-card-title">${faq.question}</div>
-          ${overrideBannerHtml}
-          <div class="faq-card-metrics">
-            <span>👁 ${faq.views} views</span>
-            <span>👍 ${faq.thumbsUp} votes</span>
-            <span>👎 ${faq.thumbsDown}</span>
-          </div>
-        </div>
-        <div class="faq-card-arrow">➜</div>
-      </div>
-    `;
-  });
-  
-  faqGrid.innerHTML = html;
-}
-
-// Render Progress Strip of student read stats
-function renderProgressStrip() {
-  const label = document.getElementById('progress-label');
-  const bar = document.getElementById('progress-bar-fill');
-  const percentLabel = document.getElementById('progress-percentage');
-  
-  if (!label || !bar || !percentLabel) return;
-  
-  const total = faqData.length;
-  const readCount = Array.from(readSections).filter(id => faqData.some(faq => faq.id === id)).length;
-  
-  const percent = total > 0 ? Math.round((readCount / total) * 100) : 0;
-  
-  label.innerText = `You've covered ${readCount} of ${total} FAQ sections`;
-  percentLabel.innerText = `${percent}% Completed`;
-  bar.style.width = `${percent}%`;
-}
-
-// Render Trending doubts this week (top 5 by searches, styled as horizontal cards)
-function renderTrendingList() {
-  const container = document.getElementById('trending-list');
-  if (!container) return;
-  
-  const sorted = [...faqData].sort((a, b) => b.searches - a.searches).slice(0, 5);
-  
-  let html = '';
-  sorted.forEach((faq, index) => {
-    const searches = faq.weeklySearches || Math.floor(faq.searches);
-    const delta = faq.trendDelta || Math.floor(faq.searches * 0.8);
-    html += `
-      <div class="trending-card" onclick="openFaqPopup('${faq.id}')">
-        <div class="trending-num-label">${String(index + 1).padStart(2, '0')}</div>
-        <div class="trending-card-title">${faq.question}</div>
-        <div class="trending-card-stats">
-          <span>${searches}/wk</span>
-          <span class="trending-stats-badge">▲ +${delta}</span>
-        </div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-}
-
-// Setup Event Listeners
-function setupEventListeners() {
-  const searchInput = document.getElementById('search-input');
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      const val = e.target.value;
-      searchQuery = val;
-      
-      detectIntent(val);
-      checkTypoSuggestion(val);
-      renderFaqGrid();
-    });
-  }
-
-  const chatBubble = document.getElementById('chatbot-bubble');
-  if (chatBubble) {
-    chatBubble.addEventListener('click', toggleChatbotWindow);
-  }
-
-  const chatClose = document.getElementById('chat-close');
-  if (chatClose) {
-    chatClose.addEventListener('click', toggleChatbotWindow);
-  }
-
-  const chatForm = document.getElementById('chat-input-form');
-  if (chatForm) {
-    chatForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      handleChatSubmit();
-    });
-  }
-
-  const modalOverlay = document.getElementById('modal-overlay');
-  if (modalOverlay) {
-    modalOverlay.addEventListener('click', (e) => {
-      if (e.target === modalOverlay) {
-        closeFaqPopup();
-      }
-    });
-  }
-}
-
-// Intent Detection Parser
-function detectIntent(val) {
-  const badge = document.getElementById('intent-badge');
-  if (!badge) return;
-  
-  const cleanVal = val.toLowerCase().trim();
-  if (cleanVal.length < 3) {
-    badge.className = 'intent-badge';
-    return;
-  }
-  
-  let found = null;
-  for (let pattern of INTENT_PATTERNS) {
-    if (cleanVal.includes(pattern.keyword)) {
-      found = pattern.label;
-      break;
-    }
-  }
-  
-  if (found) {
-    badge.innerText = found;
-    badge.className = 'intent-badge visible';
-  } else {
-    badge.className = 'intent-badge';
-  }
-}
-
-// Typo checking logic
-function checkTypoSuggestion(val) {
-  const container = document.getElementById('did-you-mean-container');
-  const suggestionSpan = document.getElementById('did-you-mean-suggestion');
-  if (!container || !suggestionSpan) return;
-  
-  const words = val.toLowerCase().trim().split(/\s+/);
-  let match = null;
-  
-  for (let word of words) {
-    if (TYPO_MAP[word]) {
-      match = TYPO_MAP[word];
-      break;
-    }
-  }
-  
-  if (match) {
-    suggestionSpan.innerText = match.correct;
-    suggestionSpan.onclick = () => {
-      const searchInput = document.getElementById('search-input');
-      searchInput.value = match.query;
-      searchQuery = match.query;
-      detectIntent(match.query);
-      container.className = 'did-you-mean';
-      renderFaqGrid();
-    };
-    container.className = 'did-you-mean visible';
-  } else {
-    container.className = 'did-you-mean';
-  }
-}
-
-// Cosine TF-IDF similarity engine
-function computeTfidfSimilarity(targetFaq) {
-  const stopwords = new Set([
-    'what', 'is', 'the', 'how', 'when', 'who', 'where', 'to', 'a', 'an', 'and', 'for', 'of', 'in', 'on', 'at', 
-    'with', 'my', 'i', 'can', 'you', 'do', 'it', 'this', 'that', 'from', 'by', 'but', 'are', 'we', 'our', 
-    'be', 'or', 'if', 'your', 'will', 'do', 'does', 'did', 'should', 'would', 'could', 'get', 'got', 'put'
-  ]);
-  
-  function tokenize(text) {
-    if (!text) return [];
-    return text.toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .split(/\s+/)
-      .filter(token => token && !stopwords.has(token));
-  }
-
-  // Filter corpus to the same category/section code, excluding the target itself
-  const categoryFaqs = faqData.filter(f => f.sectionCode === targetFaq.sectionCode && f.id !== targetFaq.id);
-  if (categoryFaqs.length === 0) return [];
-  
-  const corpus = [targetFaq, ...categoryFaqs];
-  
-  // Compute Document Frequency
-  const df = {};
-  const docsTokens = corpus.map(doc => {
-    const tokens = tokenize(doc.question + ' ' + doc.answer);
-    const uniqueTokens = new Set(tokens);
-    uniqueTokens.forEach(t => {
-      df[t] = (df[t] || 0) + 1;
-    });
-    return tokens;
-  });
-
-  const N = corpus.length;
-  const idf = {};
-  for (let term in df) {
-    idf[term] = Math.log(N / df[term]);
-  }
-
-  function getTfidfVector(tokens) {
-    const tf = {};
-    tokens.forEach(t => { tf[t] = (tf[t] || 0) + 1; });
-    
-    const vector = {};
-    for (let term in tf) {
-      vector[term] = (tf[term] / tokens.length) * (idf[term] || 0);
-    }
-    return vector;
-  }
-
-  const targetVector = getTfidfVector(docsTokens[0]);
-  let targetNorm = 0;
-  for (let term in targetVector) {
-    targetNorm += targetVector[term] * targetVector[term];
-  }
-  targetNorm = Math.sqrt(targetNorm);
-
-  const similarities = [];
-  for (let i = 1; i < corpus.length; i++) {
-    const doc = corpus[i];
-    const docVector = getTfidfVector(docsTokens[i]);
-    
-    let dot = 0;
-    for (let term in targetVector) {
-      if (docVector[term]) {
-        dot += targetVector[term] * docVector[term];
-      }
-    }
-    
-    let docNorm = 0;
-    for (let term in docVector) {
-      docNorm += docVector[term] * docVector[term];
-    }
-    docNorm = Math.sqrt(docNorm);
-    
-    const score = (targetNorm && docNorm) ? (dot / (targetNorm * docNorm)) : 0;
-    similarities.push({ faq: doc, score: score });
-  }
-
-  // Sort by cosine similarity descending
-  similarities.sort((a, b) => b.score - a.score);
-  return similarities.map(item => item.faq);
-}
-
-// Opens FAQ Detail Popup
-function openFaqPopup(id) {
-  const faq = faqData.find(f => f.id === id);
-  if (!faq) return;
-  
-  readSections.add(faq.id);
-  faq.views++;
-  saveState();
-  renderProgressStrip();
-  renderTrendingList();
-  renderFaqGrid();
-  
-  const overlay = document.getElementById('modal-overlay');
-  const title = document.getElementById('modal-title');
-  const body = document.getElementById('modal-body');
-  const categoryBadge = document.getElementById('modal-category-badge');
-  const votesUpSpan = document.getElementById('votes-up-count');
-  const votesDownSpan = document.getElementById('votes-down-count');
-  
-  categoryBadge.innerText = faq.section;
-  
-  // Show manual override notice inside popup if active
-  const override = urgencyOverrides[faq.id];
-  if (override && override.level !== 'auto' && override.note) {
-    title.innerHTML = `
-      <div class="faq-override-banner" style="display: flex; margin-bottom: 0.5rem;">
-        <span>🚨</span> <strong>Note:</strong> ${override.note}
-      </div>
-      <div>${faq.question}</div>
-    `;
-  } else {
-    title.innerText = faq.question;
-  }
-  
-  body.innerText = faq.answer;
-  votesUpSpan.innerText = faq.thumbsUp;
-  votesDownSpan.innerText = faq.thumbsDown;
-  
-  const upBtn = document.getElementById('vote-up-btn');
-  const downBtn = document.getElementById('vote-down-btn');
-  
-  upBtn.onclick = () => castVote(faq.id, 'up');
-  downBtn.onclick = () => castVote(faq.id, 'down');
-  
-  renderPopupRecommendations(faq);
-  
-  overlay.className = 'modal-overlay active';
-}
-
-// Close FAQ detail popup
-function closeFaqPopup() {
-  const overlay = document.getElementById('modal-overlay');
-  overlay.className = 'modal-overlay';
-}
-
-// Render recommendations inside popup ("Ask Before Asking" + TF-IDF similarity)
-function renderPopupRecommendations(faq) {
-  const container = document.getElementById('recommendations-container');
-  if (!container) return;
-  
-  let html = '';
-  
-  // Retrieve similar questions using TF-IDF Engine!
-  const similarFaqs = computeTfidfSimilarity(faq).slice(0, 3);
-  
-  if (similarFaqs.length > 0) {
-    html += `<div class="recommendations-title">Ask Before Asking (Recommended next)</div>`;
-    similarFaqs.forEach(ref => {
-      html += `
-        <div class="recommendation-item" onclick="navigateFaqPopup('${ref.id}')">
-          ${ref.question}
-        </div>
-      `;
-    });
-  } else {
-    html = `<div style="font-size: 0.85rem; color: var(--text-muted);">No further suggestions.</div>`;
-  }
-  
-  container.innerHTML = html;
-}
-
-// Navigate FAQ detail content within the open popup itself
-function navigateFaqPopup(id) {
-  const faq = faqData.find(f => f.id === id);
-  if (!faq) return;
-  
-  readSections.add(faq.id);
-  faq.views++;
-  saveState();
-  renderProgressStrip();
-  renderTrendingList();
-  renderFaqGrid();
-  
-  const title = document.getElementById('modal-title');
-  const body = document.getElementById('modal-body');
-  const categoryBadge = document.getElementById('modal-category-badge');
-  const votesUpSpan = document.getElementById('votes-up-count');
-  const votesDownSpan = document.getElementById('votes-down-count');
-  
-  categoryBadge.innerText = faq.section;
-  
-  const override = urgencyOverrides[faq.id];
-  if (override && override.level !== 'auto' && override.note) {
-    title.innerHTML = `
-      <div class="faq-override-banner" style="display: flex; margin-bottom: 0.5rem;">
-        <span>🚨</span> <strong>Note:</strong> ${override.note}
-      </div>
-      <div>${faq.question}</div>
-    `;
-  } else {
-    title.innerText = faq.question;
-  }
-  
-  body.innerText = faq.answer;
-  votesUpSpan.innerText = faq.thumbsUp;
-  votesDownSpan.innerText = faq.thumbsDown;
-  
-  const upBtn = document.getElementById('vote-up-btn');
-  const downBtn = document.getElementById('vote-down-btn');
-  upBtn.onclick = () => castVote(faq.id, 'up');
-  downBtn.onclick = () => castVote(faq.id, 'down');
-  
-  renderPopupRecommendations(faq);
-  
-  document.getElementById('modal-content').scrollTop = 0;
-}
-
-// Handle Thumbs up/down feedback micro-voting
-function castVote(faqId, direction) {
-  const faq = faqData.find(f => f.id === faqId);
-  if (!faq) return;
-  
-  if (direction === 'up') {
-    faq.thumbsUp++;
-  } else {
-    faq.thumbsDown++;
-    faq.urgencyScore = Math.min(100, faq.urgencyScore + 5);
-  }
-  
-  saveState();
-  
-  document.getElementById('votes-up-count').innerText = faq.thumbsUp;
-  document.getElementById('votes-down-count').innerText = faq.thumbsDown;
-  
-  const vbtn = document.getElementById(`vote-${direction}-btn`);
-  vbtn.style.transform = 'scale(1.1)';
-  setTimeout(() => { vbtn.style.transform = 'none'; }, 200);
-  
-  renderFaqGrid();
-  renderAdminHeatmap();
-  renderDoubtClusterMap();
-  renderAdminSuggestions(); // Refresh self-healing suggestions
-}
-
-// Render Admin Confusion Heatmap (Dials & Bar Gauges)
-function renderAdminHeatmap() {
-  const container = document.getElementById('heatmap-gauges');
-  if (!container) return;
-  
-  const sections = [
-    { name: 'NOC', code: 'noc', color: 'var(--urgency-critical)' },
-    { name: 'Internship', code: 'internship', color: 'var(--urgency-high)' },
-    { name: 'ViBe Viva', code: 'vibe', color: 'var(--urgency-medium)' },
-    { name: 'Rosetta Labs', code: 'rosetta', color: 'var(--urgency-low)' }
-  ];
-  
-  let html = '';
-  
-  sections.forEach(sec => {
-    const faqs = faqData.filter(f => f.sectionCode === sec.code);
-    let totalScore = 0;
-    
-    if (faqs.length > 0) {
-      faqs.forEach(f => {
-        const computed = getComputedUrgency(f);
-        totalScore += computed;
-      });
-      totalScore = Math.round(totalScore / faqs.length);
-    }
-    
-    if (panicMode && sec.code === 'noc') {
-      totalScore = 95;
-    }
-    
-    html += `
-      <div class="gauge-item">
-        <div class="gauge-labels">
-          <span class="gauge-section">${sec.name}</span>
-          <span class="gauge-score" style="color: ${sec.color}">${totalScore}% Confusion</span>
-        </div>
-        <div class="gauge-bar-bg">
-          <div class="gauge-bar-fill" style="width: ${totalScore}%; background-color: ${sec.color}"></div>
-        </div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-}
-
-// Generate the interactive SVG Bubble Chart (Doubt Cluster Map)
-function renderDoubtClusterMap() {
-  const wrapper = document.getElementById('bubble-chart-container');
-  if (!wrapper) return;
-  
-  const sectionLayout = [
-    { code: 'noc', name: 'NOC', cx: 120, cy: 130, colorVar: '--urgency-critical' },
-    { code: 'internship', name: 'Internship', cx: 280, cy: 180, colorVar: '--urgency-high' },
-    { code: 'vibe', name: 'ViBe', cx: 220, cy: 70, colorVar: '--urgency-medium' },
-    { code: 'rosetta', name: 'Rosetta', cx: 410, cy: 110, colorVar: '--urgency-low' }
-  ];
-  
-  let svgContent = `<svg width="100%" height="100%" viewBox="0 0 520 280" style="background: transparent;">`;
-  
-  sectionLayout.forEach(sec => {
-    const faqs = faqData.filter(f => f.sectionCode === sec.code);
-    
-    let totalDoubts = 0;
-    let maxUrgency = 0;
-    
-    faqs.forEach(f => {
-      const urg = getComputedUrgency(f);
-      if (urg > maxUrgency) maxUrgency = urg;
-      totalDoubts += (f.thumbsDown * 8) + (f.searches / 4) + (f.views / 20);
-    });
-    
-    if (panicMode && sec.code === 'noc') {
-      totalDoubts = Math.max(totalDoubts, 280);
-      maxUrgency = 98;
-    }
-    
-    let radius = 25 + Math.min(50, totalDoubts / 3);
-    const colorHex = getComputedStyle(document.documentElement).getPropertyValue(sec.colorVar).trim() || '#c29545';
-    
-    svgContent += `
-      <g class="bubble-node" transform="translate(0, 0)" 
-         onmouseenter="showBubbleTooltip(event, '${sec.name}', ${Math.round(totalDoubts)}, ${Math.round(maxUrgency)})"
-         onmouseleave="hideBubbleTooltip()"
-         onclick="setCategory('${sec.code}'); toggleView('student');">
-        <circle cx="${sec.cx}" cy="${sec.cy}" r="${radius}" 
-                fill="${colorHex}20" 
-                stroke="${colorHex}" 
-                stroke-width="2.5" 
-                style="filter: drop-shadow(0 2px 6px ${colorHex}15); transition: r 0.3s ease;"></circle>
-        <text x="${sec.cx}" y="${sec.cy}" class="bubble-text" style="font-size: ${Math.max(10, radius/3.5)}px">${sec.name}</text>
-      </g>
-    `;
-  });
-  
-  svgContent += `</svg>`;
-  wrapper.innerHTML = svgContent + `<div id="bubble-tooltip" class="bubble-tooltip"></div>`;
-}
-
-// Tooltip helpers for SVG chart
-window.showBubbleTooltip = function(event, name, doubts, urgency) {
-  const tooltip = document.getElementById('bubble-tooltip');
-  if (!tooltip) return;
-  
-  tooltip.innerHTML = `
-    <strong>${name} Category</strong><br/>
-    Doubt Signals: ${doubts}<br/>
-    Peak Urgency: ${urgency}%
-  `;
-  
-  tooltip.style.opacity = '1';
-  
-  const wrapper = document.getElementById('bubble-chart-container');
-  const rect = wrapper.getBoundingClientRect();
-  const x = event.clientX - rect.left + 15;
-  const y = event.clientY - rect.top + 15;
-  
-  tooltip.style.left = `${x}px`;
-  tooltip.style.top = `${y}px`;
-};
-
-window.hideBubbleTooltip = function() {
-  const tooltip = document.getElementById('bubble-tooltip');
-  if (tooltip) {
-    tooltip.style.opacity = '0';
-  }
-};
-
-// Render Self-Healing suggestions on Admin Dashboard
-function renderAdminSuggestions() {
-  const container = document.getElementById('admin-suggestions-list');
-  if (!container) return;
-  
-  // Dynamically populate based on rating alerts
-  const dynamicSuggestions = [...suggestions];
-  
-  // Find faqs with more than 3 thumbs-downs to self-heal
-  faqData.forEach(faq => {
-    if (faq.thumbsDown >= 3) {
-      const alreadyPresent = dynamicSuggestions.some(s => s.targetId === faq.id);
-      if (!alreadyPresent) {
-        dynamicSuggestions.unshift({
-          id: `dynamic-sh-${faq.id}`,
-          type: 'low-rating',
-          details: `FAQ '${faq.question.substring(0, 30)}...' has received ${faq.thumbsDown} thumbs-downs.`,
-          action: "Rewrite/Elaborate this answer to clarify.",
-          targetId: faq.id,
-          completed: false
-        });
-      }
-    }
-  });
-
-  let html = '';
-  dynamicSuggestions.forEach(sug => {
-    const isCompleted = sug.completed;
-    const completedClass = isCompleted ? 'completed' : '';
-    
-    html += `
-      <div class="suggestion-card ${completedClass}">
-        <div class="suggestion-type">${sug.type.replace('-', ' ')}</div>
-        <div class="suggestion-desc">${sug.details}</div>
-        <div class="suggestion-action-box">
-          <div class="suggestion-action-text">Action: ${sug.action}</div>
-          <button class="suggestion-btn" onclick="applySelfHealing('${sug.id}')" ${isCompleted ? 'disabled' : ''}>
-            ${isCompleted ? 'Applied' : 'Resolve'}
-          </button>
-        </div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-}
-
-// Execute simulated action from self-healing panel
-function applySelfHealing(id) {
-  let sug = suggestions.find(s => s.id === id);
-  if (!sug) {
-    // Check if it's dynamic
-    const match = faqData.find(f => `dynamic-sh-${f.id}` === id);
-    if (match) {
-      sug = {
-        id: id,
-        type: 'low-rating',
-        targetId: match.id,
-        completed: false
-      };
-      suggestions.push(sug);
-    }
-  }
-  
-  if (!sug || sug.completed) return;
-  sug.completed = true;
-  
-  if (sug.type === 'low-rating') {
-    const faq = faqData.find(f => f.id === sug.targetId);
-    if (faq) {
-      faq.thumbsDown = 0;
-      faq.thumbsUp += 10;
-      faq.answer += " [Revised & updated with HOD feedback].";
-    }
-  } else if (sug.type === 'missing-faq') {
-    const payload = sug.suggestionPayload;
-    const exists = faqData.some(f => f.id === 'stipend-scale');
-    if (!exists) {
-      faqData.push({
-        id: "stipend-scale",
-        section: payload.section,
-        sectionCode: payload.sectionCode,
-        question: payload.question,
-        answer: payload.answer,
-        urgencyScore: 40,
-        thumbsUp: 10,
-        thumbsDown: 0,
-        views: 41,
-        searches: 41,
-        similarIds: ["work-4", "work-1"],
-        nextDoubtIds: ["work-4"]
-      });
-    }
-  } else if (sug.type === 'panic-prevention') {
-    const faq = faqData.find(f => f.id === sug.targetId);
-    if (faq) {
-      faq.urgencyScore = 88;
-    }
-  }
-  
-  saveState();
-  renderAll();
-  alert("Self-healing action applied successfully!");
-}
-
-// Render Simulation State Buttons on Admin
-function renderSimulationState() {
-  const panicBtn = document.getElementById('sim-panic-btn');
-  if (!panicBtn) return;
-  
-  panicBtn.className = panicMode ? 'sim-btn panic-active' : 'sim-btn';
-  panicBtn.innerHTML = `
-    <span>Simulate NOC Search Spike (${panicMode ? '250' : '20'} reqs)</span>
-    <span class="sim-indicator"></span>
-  `;
-}
-
-// Trigger simulated NOC Search Spike (Panic Mode)
-function toggleSimulatedPanic() {
-  panicMode = !panicMode;
-  
-  if (panicMode) {
-    faqData.forEach(f => {
-      if (f.sectionCode === 'noc') {
-        f.searches += 200;
-        f.views += 100;
-      }
-    });
-  } else {
-    faqData.forEach(f => {
-      if (f.sectionCode === 'noc') {
-        f.searches = Math.max(10, f.searches - 200);
-      }
-    });
-  }
-  
-  saveState();
-  renderAll();
-}
-
-// --- AI Chatbot Yaksha Mini logic ---
-
-// Toggle chatbot drawer visible state
-function toggleChatbotWindow() {
-  chatWindowOpen = !chatWindowOpen;
-  const chatWindow = document.getElementById('chat-window');
-  chatWindow.classList.toggle('active', chatWindowOpen);
-  
-  if (chatWindowOpen) {
-    updateChatbotUnread(false);
-    setTimeout(() => {
-      document.getElementById('chat-input-field').focus();
-    }, 300);
-  }
-}
-
-// Unread notification badge control
-function updateChatbotUnread(hasUnread) {
-  const unreadDot = document.getElementById('chatbot-badge-unread');
-  if (unreadDot) {
-    unreadDot.style.display = hasUnread ? 'block' : 'none';
-  }
-}
-
-// Add user dialogue message bubbles
-function addUserMessage(text) {
-  chatbotHistory.push({ sender: 'user', text: text });
-  saveState();
-  renderChatHistory();
-}
-
-// Add bot dialogue response bubbles
-function addBotMessage(text) {
-  chatbotHistory.push({ sender: 'bot', text: text });
-  saveState();
-  renderChatHistory();
-}
-
-// Render the chatbot conversation stream
-function renderChatHistory() {
-  const feed = document.getElementById('chat-messages');
-  if (!feed) return;
-  
-  let html = '';
-  chatbotHistory.forEach(msg => {
-    let formattedText = msg.text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\n/g, '<br/>');
-      
-    html += `
-      <div class="chat-bubble-msg ${msg.sender}">
-        ${formattedText}
-      </div>
-    `;
-  });
-  
-  feed.innerHTML = html;
-  feed.scrollTop = feed.scrollHeight;
-}
-
-// Handle manual input submits
-function handleChatSubmit() {
-  const input = document.getElementById('chat-input-field');
-  if (!input) return;
-  
-  const text = input.value.trim();
-  if (text === '') return;
-  
-  input.value = '';
-  addUserMessage(text);
-  
-  setTimeout(() => {
-    processChatResponse(text);
-  }, 600);
-}
-
-// Dialog intelligence engine (Keyword & Intent matcher + suggestions)
-function processChatResponse(text) {
-  const query = text.toLowerCase();
-  let response = '';
-  
-  let faqMatch = faqData.find(f => f.question.toLowerCase().includes(query) || query.includes(f.question.toLowerCase()));
-  
-  if (faqMatch) {
-    response = `Here is what I found for **"${faqMatch.question}"**:\n\n${faqMatch.answer.slice(0, 180)}...\n\nWould you like me to open the full FAQ card details for you?`;
-    addBotMessage(response);
-    renderChatChips([
-      { text: `Open "${faqMatch.section}" FAQ`, action: () => { openFaqPopup(faqMatch.id); toggleChatbotWindow(); } },
-      { text: "Ask something else", action: () => sendPremadeQuery("Hello") }
-    ]);
-    return;
-  }
-  
-  let presetFound = null;
-  for (let pr of YAKSHA_CHAT_PRESETS) {
-    const match = pr.keywords.some(kw => query.includes(kw));
-    if (match) {
-      presetFound = pr;
-      break;
-    }
-  }
-  
-  if (presetFound) {
-    addBotMessage(presetFound.reply);
-    
-    if (query.includes('noc')) {
-      renderChatChips([
-        { text: "NOC requirements", action: () => sendPremadeQuery("What are NOC requirements?") },
-        { text: "NOC dates", action: () => sendPremadeQuery("When open NOC dates?") },
-        { text: "Show NOC list", action: () => { setCategory('noc'); toggleChatbotWindow(); } }
-      ]);
-    } else if (query.includes('intern')) {
-      renderChatChips([
-        { text: "Timeline & Dates", action: () => sendPremadeQuery("Internship dates timeline") },
-        { text: "External internship?", action: () => sendPremadeQuery("Can I do external internship?") }
-      ]);
-    } else if (query.includes('vibe')) {
-      renderChatChips([
-        { text: "Viva guidelines", action: () => sendPremadeQuery("Viva guidelines pattern") },
-        { text: "ViBe link", action: () => sendPremadeQuery("ViBe registration link") }
-      ]);
-    } else if (query.includes('rosetta')) {
-      renderChatChips([
-        { text: "Request Access", action: () => sendPremadeQuery("Request Rosetta Access") },
-        { text: "Troubleshoot login", action: () => sendPremadeQuery("Rosetta login issues") }
-      ]);
-    } else {
-      showDefaultChips();
-    }
-  } else {
-    response = "I couldn't find an exact answer for that query. I have logged this for our admin team as a missing search query. In the meantime, try asking about 'NOC dates', 'Internship registration', or 'ViBe portal'.";
-    addBotMessage(response);
-    logMissingQueryAdmin(text);
-    showDefaultChips();
-  }
-}
-
-// Log missing queries into admin self-healing recommendations dynamically!
-function logMissingQueryAdmin(text) {
-  const existing = suggestions.some(s => s.details.includes(text));
-  if (existing || text.length < 5) return;
-  
-  suggestions.unshift({
-    id: `sh-${Date.now()}`,
-    type: 'missing-faq',
-    details: `Multiple students searched for "${text}" but no direct FAQ exists.`,
-    action: `Create a new FAQ matching query: "${text}"`,
+// Initial suggestions database
+const INITIAL_SELF_HEALING_SUGGESTIONS = [
+  {
+    id: "sh-1",
+    type: "low-rating",
+    details: "Question 1.13 ('Failed to submit Zoom Poll') received 24 thumbs-downs this week.",
+    action: "Add troubleshooting hints for Chromebook browser versions.",
+    targetId: "phase1-13",
+    completed: false
+  },
+  {
+    id: "sh-2",
+    type: "missing-faq",
+    details: "56 students searched for 'VINS stipend scale' but no exact FAQ details exists.",
+    action: "Generate a stipend details card confirming unpaid status and rewards.",
     suggestionPayload: {
-      section: "NOC",
-      sectionCode: "noc",
-      question: `Guidelines for ${text}`,
-      answer: `This FAQ has been generated automatically to address the query: "${text}". Standard guidelines follow the departmental regulatory committee standards. Please contact student counseling for case-specific queries.`
+      section: "Work & Mentorship",
+      sectionCode: "work",
+      question: "VINS stipend scale and financial policy",
+      answer: "VINS is a remote academic research program and is unpaid. We cover cloud computing credits, LMS fees, and provide academic certificates. Select publishing teams receive $100 Dean awards."
     },
     completed: false
-  });
-  
-  saveState();
-  if (currentView === 'admin') {
-    renderAdminSuggestions();
+  },
+  {
+    id: "sh-3",
+    type: "panic-prevention",
+    details: "NOC signing deadlines are causing sudden surges in search volume.",
+    action: "Post warning notice on HOD signature requirements.",
+    targetId: "noc-2",
+    completed: false
   }
-}
+];
 
-// Chat action chips rendering
-function renderChatChips(chips) {
-  const chipsContainer = document.getElementById('chat-chips');
-  if (!chipsContainer) return;
-  
-  let html = '';
-  chips.forEach((ch, idx) => {
-    html += `<button class="chat-chip" id="chat-chip-${idx}">${ch.text}</button>`;
-  });
-  
-  chipsContainer.innerHTML = html;
-  
-  chips.forEach((ch, idx) => {
-    const btn = document.getElementById(`chat-chip-${idx}`);
-    if (btn) btn.onclick = ch.action;
-  });
-}
-
-function showDefaultChips() {
-  renderChatChips([
-    { text: "📅 Dates & Deadlines", action: () => sendPremadeQuery("Show dates deadlines") },
-    { text: "📋 NOC requirements", action: () => sendPremadeQuery("NOC document requirements") },
-    { text: "🎙️ ViBe Guide", action: () => sendPremadeQuery("Viva guidelines pattern") }
-  ]);
-}
-
-// Send pre-made queries from recommendation chips
-function sendPremadeQuery(text) {
-  addUserMessage(text);
-  setTimeout(() => {
-    processChatResponse(text);
-  }, 600);
-}
-
-// Log out user
-function handleLogout() {
-  localStorage.removeItem('samagama_session');
-  window.location.href = 'login.html';
-}
-
-// Switch between sub-nav panels (Overview, FAQ, Voice)
-function switchSubNav(panelId) {
-  currentSubNav = panelId;
-  
-  document.getElementById('panel-overview').style.display = 'none';
-  document.getElementById('panel-faq').style.display = 'none';
-  document.getElementById('panel-voice').style.display = 'none';
-  
-  document.getElementById(`panel-${panelId}`).style.display = 'block';
-  
-  document.getElementById('sub-nav-overview').classList.toggle('active', panelId === 'overview');
-  document.getElementById('sub-nav-faq').classList.toggle('active', panelId === 'faq');
-  document.getElementById('sub-nav-voice').classList.toggle('active', panelId === 'voice');
-  
-  if (panelId === 'voice') {
-    renderVoiceBoard();
+// Chat presets for Yaksha Mini AI chatbot
+const YAKSHA_CHAT_PRESETS = [
+  {
+    keywords: ["noc", "no objection", "certificate"],
+    reply: "NOC submissions must be completed before July 10, 2026. The dates on the NOC template must match July 1 to August 25. Home HOD/Dean signatures are mandatory. IIT Ropar faculty cannot sign home NOCs."
+  },
+  {
+    keywords: ["stipend", "unpaid", "money", "salary"],
+    reply: "VINS is a remote learning/research internship and is unpaid. We cover server resource fees and provide reference letters. High-impact research works receive Dean awards."
+  },
+  {
+    keywords: ["spurti", "sp", "points"],
+    reply: "Spurti Points (SP) evaluate attendance and participation. Minimum weekly target is 40. Falling below 40 triggers program warnings. Check 'Spurti Points System' cards in categories for calculation details."
+  },
+  {
+    keywords: ["vibe", "viva", "oral", "exam"],
+    reply: "ViBe is our final Viva exam portal. Login credentials will arrive at the start of Phase 3. Live presentation tests must be taken on desktop with cameras turned on."
+  },
+  {
+    keywords: ["dates", "timeline", "when", "start"],
+    reply: "Key Dates:\n• July 1 - Core Onboarding / Zoom Kickoff\n• July 10 - NOC Submission Deadline\n• August 25 - End of internship cohorts."
+  },
+  {
+    keywords: ["hello", "hi", "hey", "greetings"],
+    reply: "Hello! I am Yaksha Mini, your AI companion. Ask me anything about VINS onboarding, NOC dates, Spurti calculations, or ViBe login details!"
   }
-}
-
-// Render student voice issues board
-function renderVoiceBoard() {
-  const container = document.getElementById('voice-issues-list');
-  if (!container) return;
-  
-  const list = [...voiceIssuesData].sort((a, b) => b.upvotes - a.upvotes);
-  
-  let html = '';
-  list.forEach(issue => {
-    html += `
-      <div class="voice-issue-item">
-        <div class="voice-issue-content">
-          <span class="voice-issue-tag">#${issue.category}</span>
-          <span class="voice-issue-desc">${issue.text}</span>
-        </div>
-        <div class="voice-issue-action">
-          <span class="voice-issue-upvotes">${issue.upvotes} votes</span>
-          <button class="btn-voice-upvote" onclick="upvoteVoiceIssue('${issue.id}')" ${issue.upvoted ? 'disabled style="opacity:0.6; cursor:not-allowed;"' : ''}>
-            <span>${issue.upvoted ? 'Upvoted' : 'Upvote'}</span>
-            <span>👍</span>
-          </button>
-        </div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-}
-
-// Upvote a student concern issue
-function upvoteVoiceIssue(id) {
-  const issue = voiceIssuesData.find(i => i.id === id);
-  if (!issue || issue.upvoted) return;
-  
-  issue.upvotes++;
-  issue.upvoted = true;
-  saveState();
-  renderVoiceBoard();
-  
-  if (issue.upvotes >= 100) {
-    const existing = suggestions.some(s => s.details.includes(issue.text));
-    if (!existing) {
-      suggestions.unshift({
-        id: `sh-voice-${Date.now()}`,
-        type: 'low-rating',
-        details: `Community issue "${issue.text}" has crossed 100 upvotes!`,
-        action: `Contact engineering to resolve "${issue.category}" and update related FAQs.`,
-        completed: false
-      });
-      saveState();
-      if (currentView === 'admin') {
-        renderAdminSuggestions();
-      }
-    }
-  }
-}
-
-// Handle voice concern form submits
-function handleVoiceSubmit(event) {
-  event.preventDefault();
-  const textVal = document.getElementById('voice-issue-text').value.trim();
-  const catVal = document.getElementById('voice-category').value;
-  
-  if (textVal === '') return;
-  
-  const newIssue = {
-    id: `v-${Date.now()}`,
-    text: textVal,
-    upvotes: 1,
-    category: catVal,
-    upvoted: true
-  };
-  
-  voiceIssuesData.push(newIssue);
-  saveState();
-  
-  document.getElementById('voice-issue-text').value = '';
-  renderVoiceBoard();
-  
-  const formCard = document.querySelector('.voice-form-card');
-  const alertToast = document.createElement('div');
-  alertToast.innerText = "Concern posted successfully to board!";
-  alertToast.style.cssText = "margin-top: 1rem; color: var(--urgency-low); font-size: 0.8rem; text-align: center;";
-  formCard.appendChild(alertToast);
-  setTimeout(() => { alertToast.remove(); }, 3000);
-}
+];
