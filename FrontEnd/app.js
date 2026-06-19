@@ -1,7 +1,8 @@
+// app.js
 // State Variables
 let faqData = [];
 let suggestions = [];
-let currentTheme = 'light'; // Default to light warm cream
+let currentTheme = 'light';
 let currentView = 'student';
 let activeCategory = 'all';
 let searchQuery = '';
@@ -11,7 +12,7 @@ let chatbotHistory = [];
 let chatWindowOpen = false;
 let currentSubNav = 'faq';
 let voiceIssuesData = [];
-let urgencyOverrides = {}; // Map of faqId -> { level: 'critical'|'high'|'medium'|'low'|'auto', note: '...' }
+let urgencyOverrides = {};
 
 // Intent patterns for Search Intent Detection
 const INTENT_PATTERNS = [
@@ -48,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   switchSubNav(currentSubNav);
   
-  // Show initial bot greeting if history is empty
   if (chatbotHistory.length === 0) {
     addBotMessage("Greetings! I am **Yaksha Mini**, your AI FAQ assistant. Ask me anything about VINS onboarding, NOC dates, Spurti calculations, or ViBe logins!");
     updateChatbotUnread(true);
@@ -71,7 +71,7 @@ function loadState() {
 
   faqData = savedFaq ? JSON.parse(savedFaq) : [...INITIAL_FAQ_DATA];
   suggestions = savedSuggestions ? JSON.parse(savedSuggestions) : [...INITIAL_SELF_HEALING_SUGGESTIONS];
-  currentTheme = savedTheme || 'light'; // Default to light mode (warm cream)
+  currentTheme = savedTheme || 'light';
   currentView = savedView || 'student';
   panicMode = savedPanic === 'true';
   urgencyOverrides = savedOverrides ? JSON.parse(savedOverrides) : {};
@@ -100,14 +100,14 @@ function loadState() {
     { id: 'noc-2', searches: 41, weeklySearches: 41, trendDelta: 3 }
   ];
 
-  // Cap all other search values to a maximum of 35 so enforced ones are the top 5
+  // Cap other searches to max of 35
   faqData.forEach(faq => {
     if (!['noc-announce', 'noc-1', 'noc-6', 'vibe-2', 'noc-2'].includes(faq.id)) {
       faq.searches = Math.min(faq.searches, 35);
     }
   });
 
-  // Apply or inject enforcements
+  // Apply enforcements
   trendingEnforcements.forEach(enforce => {
     let faq = faqData.find(f => f.id === enforce.id);
     if (!faq) {
@@ -304,7 +304,6 @@ function setCategory(catCode) {
 
 // Compute urgency score for FAQs dynamically
 function getComputedUrgency(faq) {
-  // 1. Check for manual override first
   if (urgencyOverrides[faq.id] && urgencyOverrides[faq.id].level !== 'auto') {
     const level = urgencyOverrides[faq.id].level;
     if (level === 'critical') return 100;
@@ -315,9 +314,8 @@ function getComputedUrgency(faq) {
 
   let score = faq.urgencyScore;
   
-  // NOC gets a panic bump if panicMode is active
   if (panicMode && faq.sectionCode === 'noc') {
-    score = Math.max(score, 98); // Force high critical urgency
+    score = Math.max(score, 98);
   }
   
   const votePenalty = faq.thumbsDown * 15;
@@ -332,7 +330,6 @@ function populateOverrideFaqSelect() {
   if (!select) return;
   
   let html = '<option value="">-- Choose an FAQ Question --</option>';
-  // Sort alphabetically
   const sortedFaqs = [...faqData].sort((a, b) => a.question.localeCompare(b.question));
   sortedFaqs.forEach(faq => {
     html += `<option value="${faq.id}">${faq.question.substring(0, 70)}${faq.question.length > 70 ? '...' : ''}</option>`;
@@ -370,7 +367,6 @@ function handleUrgencyOverride(event) {
   saveState();
   renderAll();
   
-  // Show confirmation alert
   alert("Urgency override applied successfully!");
   noteInput.value = '';
   select.value = '';
@@ -396,7 +392,6 @@ function renderFaqGrid() {
     );
   }
   
-  // Sort by urgency descending (Critical/overrides float to top automatically)
   list.sort((a, b) => getComputedUrgency(b) - getComputedUrgency(a));
   
   if (list.length === 0) {
@@ -463,7 +458,7 @@ function renderFaqGrid() {
   faqGrid.innerHTML = html;
 }
 
-// Render Progress Strip of student read stats
+// Render Progress Strip
 function renderProgressStrip() {
   const label = document.getElementById('progress-label');
   const bar = document.getElementById('progress-bar-fill');
@@ -481,7 +476,7 @@ function renderProgressStrip() {
   bar.style.width = `${percent}%`;
 }
 
-// Render Trending doubts this week (top 5 by searches, styled as horizontal cards)
+// Render Trending doubts this week (styled as horizontal cards)
 function renderTrendingList() {
   const container = document.getElementById('trending-list');
   if (!container) return;
@@ -624,13 +619,11 @@ function computeTfidfSimilarity(targetFaq) {
       .filter(token => token && !stopwords.has(token));
   }
 
-  // Filter corpus to the same category/section code, excluding the target itself
   const categoryFaqs = faqData.filter(f => f.sectionCode === targetFaq.sectionCode && f.id !== targetFaq.id);
   if (categoryFaqs.length === 0) return [];
   
   const corpus = [targetFaq, ...categoryFaqs];
   
-  // Compute Document Frequency
   const df = {};
   const docsTokens = corpus.map(doc => {
     const tokens = tokenize(doc.question + ' ' + doc.answer);
@@ -687,7 +680,6 @@ function computeTfidfSimilarity(targetFaq) {
     similarities.push({ faq: doc, score: score });
   }
 
-  // Sort by cosine similarity descending
   similarities.sort((a, b) => b.score - a.score);
   return similarities.map(item => item.faq);
 }
@@ -713,7 +705,6 @@ function openFaqPopup(id) {
   
   categoryBadge.innerText = faq.section;
   
-  // Show manual override notice inside popup if active
   const override = urgencyOverrides[faq.id];
   if (override && override.level !== 'auto' && override.note) {
     title.innerHTML = `
@@ -732,12 +723,10 @@ function openFaqPopup(id) {
   
   const upBtn = document.getElementById('vote-up-btn');
   const downBtn = document.getElementById('vote-down-btn');
-  
   upBtn.onclick = () => castVote(faq.id, 'up');
   downBtn.onclick = () => castVote(faq.id, 'down');
   
   renderPopupRecommendations(faq);
-  
   overlay.className = 'modal-overlay active';
 }
 
@@ -747,14 +736,12 @@ function closeFaqPopup() {
   overlay.className = 'modal-overlay';
 }
 
-// Render recommendations inside popup ("Ask Before Asking" + TF-IDF similarity)
+// Render recommendations inside popup
 function renderPopupRecommendations(faq) {
   const container = document.getElementById('recommendations-container');
   if (!container) return;
   
   let html = '';
-  
-  // Retrieve similar questions using TF-IDF Engine!
   const similarFaqs = computeTfidfSimilarity(faq).slice(0, 3);
   
   if (similarFaqs.length > 0) {
@@ -773,7 +760,7 @@ function renderPopupRecommendations(faq) {
   container.innerHTML = html;
 }
 
-// Navigate FAQ detail content within the open popup itself
+// Navigate FAQ detail content inside popup
 function navigateFaqPopup(id) {
   const faq = faqData.find(f => f.id === id);
   if (!faq) return;
@@ -815,7 +802,6 @@ function navigateFaqPopup(id) {
   downBtn.onclick = () => castVote(faq.id, 'down');
   
   renderPopupRecommendations(faq);
-  
   document.getElementById('modal-content').scrollTop = 0;
 }
 
@@ -843,10 +829,10 @@ function castVote(faqId, direction) {
   renderFaqGrid();
   renderAdminHeatmap();
   renderDoubtClusterMap();
-  renderAdminSuggestions(); // Refresh self-healing suggestions
+  renderAdminSuggestions();
 }
 
-// Render Admin Confusion Heatmap (Dials & Bar Gauges)
+// Render Admin Confusion Heatmap
 function renderAdminHeatmap() {
   const container = document.getElementById('heatmap-gauges');
   if (!container) return;
@@ -859,7 +845,6 @@ function renderAdminHeatmap() {
   ];
   
   let html = '';
-  
   sections.forEach(sec => {
     const faqs = faqData.filter(f => f.sectionCode === sec.code);
     let totalScore = 0;
@@ -892,7 +877,7 @@ function renderAdminHeatmap() {
   container.innerHTML = html;
 }
 
-// Generate the interactive SVG Bubble Chart (Doubt Cluster Map)
+// Generate interactive SVG Bubble Chart
 function renderDoubtClusterMap() {
   const wrapper = document.getElementById('bubble-chart-container');
   if (!wrapper) return;
@@ -931,12 +916,12 @@ function renderDoubtClusterMap() {
          onmouseenter="showBubbleTooltip(event, '${sec.name}', ${Math.round(totalDoubts)}, ${Math.round(maxUrgency)})"
          onmouseleave="hideBubbleTooltip()"
          onclick="setCategory('${sec.code}'); toggleView('student');">
-        <circle cx="${sec.cx}" cy="${sec.cy}" r="${radius}" 
-                fill="${colorHex}20" 
-                stroke="${colorHex}" 
-                stroke-width="2.5" 
-                style="filter: drop-shadow(0 2px 6px ${colorHex}15); transition: r 0.3s ease;"></circle>
-        <text x="${sec.cx}" y="${sec.cy}" class="bubble-text" style="font-size: ${Math.max(10, radius/3.5)}px">${sec.name}</text>
+         <circle cx="${sec.cx}" cy="${sec.cy}" r="${radius}" 
+                 fill="${colorHex}20" 
+                 stroke="${colorHex}" 
+                 stroke-width="2.5" 
+                 style="filter: drop-shadow(0 2px 6px ${colorHex}15); transition: r 0.3s ease;"></circle>
+         <text x="${sec.cx}" y="${sec.cy}" class="bubble-text" style="font-size: ${Math.max(10, radius/3.5)}px">${sec.name}</text>
       </g>
     `;
   });
@@ -955,7 +940,6 @@ window.showBubbleTooltip = function(event, name, doubts, urgency) {
     Doubt Signals: ${doubts}<br/>
     Peak Urgency: ${urgency}%
   `;
-  
   tooltip.style.opacity = '1';
   
   const wrapper = document.getElementById('bubble-chart-container');
@@ -974,15 +958,13 @@ window.hideBubbleTooltip = function() {
   }
 };
 
-// Render Self-Healing suggestions on Admin Dashboard
+// Render Self-Healing suggestions
 function renderAdminSuggestions() {
   const container = document.getElementById('admin-suggestions-list');
   if (!container) return;
   
-  // Dynamically populate based on rating alerts
   const dynamicSuggestions = [...suggestions];
   
-  // Find faqs with more than 3 thumbs-downs to self-heal
   faqData.forEach(faq => {
     if (faq.thumbsDown >= 3) {
       const alreadyPresent = dynamicSuggestions.some(s => s.targetId === faq.id);
@@ -1021,19 +1003,13 @@ function renderAdminSuggestions() {
   container.innerHTML = html;
 }
 
-// Execute simulated action from self-healing panel
+// Execute self-healing action
 function applySelfHealing(id) {
   let sug = suggestions.find(s => s.id === id);
   if (!sug) {
-    // Check if it's dynamic
     const match = faqData.find(f => `dynamic-sh-${f.id}` === id);
     if (match) {
-      sug = {
-        id: id,
-        type: 'low-rating',
-        targetId: match.id,
-        completed: false
-      };
+      sug = { id: id, type: 'low-rating', targetId: match.id, completed: false };
       suggestions.push(sug);
     }
   }
@@ -1079,7 +1055,7 @@ function applySelfHealing(id) {
   alert("Self-healing action applied successfully!");
 }
 
-// Render Simulation State Buttons on Admin
+// Render Simulation Sandbox State
 function renderSimulationState() {
   const panicBtn = document.getElementById('sim-panic-btn');
   if (!panicBtn) return;
@@ -1094,7 +1070,6 @@ function renderSimulationState() {
 // Trigger simulated NOC Search Spike (Panic Mode)
 function toggleSimulatedPanic() {
   panicMode = !panicMode;
-  
   if (panicMode) {
     faqData.forEach(f => {
       if (f.sectionCode === 'noc') {
@@ -1109,14 +1084,11 @@ function toggleSimulatedPanic() {
       }
     });
   }
-  
   saveState();
   renderAll();
 }
 
 // --- AI Chatbot Yaksha Mini logic ---
-
-// Toggle chatbot drawer visible state
 function toggleChatbotWindow() {
   chatWindowOpen = !chatWindowOpen;
   const chatWindow = document.getElementById('chat-window');
@@ -1130,7 +1102,6 @@ function toggleChatbotWindow() {
   }
 }
 
-// Unread notification badge control
 function updateChatbotUnread(hasUnread) {
   const unreadDot = document.getElementById('chatbot-badge-unread');
   if (unreadDot) {
@@ -1138,21 +1109,18 @@ function updateChatbotUnread(hasUnread) {
   }
 }
 
-// Add user dialogue message bubbles
 function addUserMessage(text) {
   chatbotHistory.push({ sender: 'user', text: text });
   saveState();
   renderChatHistory();
 }
 
-// Add bot dialogue response bubbles
 function addBotMessage(text) {
   chatbotHistory.push({ sender: 'bot', text: text });
   saveState();
   renderChatHistory();
 }
 
-// Render the chatbot conversation stream
 function renderChatHistory() {
   const feed = document.getElementById('chat-messages');
   if (!feed) return;
@@ -1163,19 +1131,12 @@ function renderChatHistory() {
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/\n/g, '<br/>');
-      
-    html += `
-      <div class="chat-bubble-msg ${msg.sender}">
-        ${formattedText}
-      </div>
-    `;
+    html += `<div class="chat-bubble-msg ${msg.sender}">${formattedText}</div>`;
   });
-  
   feed.innerHTML = html;
   feed.scrollTop = feed.scrollHeight;
 }
 
-// Handle manual input submits
 function handleChatSubmit() {
   const input = document.getElementById('chat-input-field');
   if (!input) return;
@@ -1191,13 +1152,11 @@ function handleChatSubmit() {
   }, 600);
 }
 
-// Dialog intelligence engine (Keyword & Intent matcher + suggestions)
 function processChatResponse(text) {
   const query = text.toLowerCase();
   let response = '';
   
   let faqMatch = faqData.find(f => f.question.toLowerCase().includes(query) || query.includes(f.question.toLowerCase()));
-  
   if (faqMatch) {
     response = `Here is what I found for **"${faqMatch.question}"**:\n\n${faqMatch.answer.slice(0, 180)}...\n\nWould you like me to open the full FAQ card details for you?`;
     addBotMessage(response);
@@ -1252,7 +1211,6 @@ function processChatResponse(text) {
   }
 }
 
-// Log missing queries into admin self-healing recommendations dynamically!
 function logMissingQueryAdmin(text) {
   const existing = suggestions.some(s => s.details.includes(text));
   if (existing || text.length < 5) return;
@@ -1277,7 +1235,6 @@ function logMissingQueryAdmin(text) {
   }
 }
 
-// Chat action chips rendering
 function renderChatChips(chips) {
   const chipsContainer = document.getElementById('chat-chips');
   if (!chipsContainer) return;
@@ -1286,7 +1243,6 @@ function renderChatChips(chips) {
   chips.forEach((ch, idx) => {
     html += `<button class="chat-chip" id="chat-chip-${idx}">${ch.text}</button>`;
   });
-  
   chipsContainer.innerHTML = html;
   
   chips.forEach((ch, idx) => {
@@ -1303,28 +1259,21 @@ function showDefaultChips() {
   ]);
 }
 
-// Send pre-made queries from recommendation chips
 function sendPremadeQuery(text) {
   addUserMessage(text);
-  setTimeout(() => {
-    processChatResponse(text);
-  }, 600);
+  setTimeout(() => { processChatResponse(text); }, 600);
 }
 
-// Log out user
 function handleLogout() {
   localStorage.removeItem('samagama_session');
   window.location.href = 'login.html';
 }
 
-// Switch between sub-nav panels (Overview, FAQ, Voice)
 function switchSubNav(panelId) {
   currentSubNav = panelId;
-  
   document.getElementById('panel-overview').style.display = 'none';
   document.getElementById('panel-faq').style.display = 'none';
   document.getElementById('panel-voice').style.display = 'none';
-  
   document.getElementById(`panel-${panelId}`).style.display = 'block';
   
   document.getElementById('sub-nav-overview').classList.toggle('active', panelId === 'overview');
@@ -1336,13 +1285,11 @@ function switchSubNav(panelId) {
   }
 }
 
-// Render student voice issues board
 function renderVoiceBoard() {
   const container = document.getElementById('voice-issues-list');
   if (!container) return;
   
   const list = [...voiceIssuesData].sort((a, b) => b.upvotes - a.upvotes);
-  
   let html = '';
   list.forEach(issue => {
     html += `
@@ -1361,11 +1308,9 @@ function renderVoiceBoard() {
       </div>
     `;
   });
-  
   container.innerHTML = html;
 }
 
-// Upvote a student concern issue
 function upvoteVoiceIssue(id) {
   const issue = voiceIssuesData.find(i => i.id === id);
   if (!issue || issue.upvoted) return;
@@ -1386,14 +1331,11 @@ function upvoteVoiceIssue(id) {
         completed: false
       });
       saveState();
-      if (currentView === 'admin') {
-        renderAdminSuggestions();
-      }
+      if (currentView === 'admin') { renderAdminSuggestions(); }
     }
   }
 }
 
-// Handle voice concern form submits
 function handleVoiceSubmit(event) {
   event.preventDefault();
   const textVal = document.getElementById('voice-issue-text').value.trim();
@@ -1401,14 +1343,7 @@ function handleVoiceSubmit(event) {
   
   if (textVal === '') return;
   
-  const newIssue = {
-    id: `v-${Date.now()}`,
-    text: textVal,
-    upvotes: 1,
-    category: catVal,
-    upvoted: true
-  };
-  
+  const newIssue = { id: `v-${Date.now()}`, text: textVal, upvotes: 1, category: catVal, upvoted: true };
   voiceIssuesData.push(newIssue);
   saveState();
   
