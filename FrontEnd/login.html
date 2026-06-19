@@ -6,15 +6,318 @@
   <title>Login - Samagama FAQ Portal</title>
   <meta name="description" content="Secure portal access authentication gate for Samagama FAQ Intelligence Engine.">
   <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --neon-cyan: #00f3ff;
+      --neon-purple: #bd00ff;
+      --neon-pink: #ff007f;
+      --neon-green: #39ff14;
+      --neon-orange: #ff6c00;
+      --neon-red: #ff3131;
+      --neon-yellow: #ffe600;
+      --bg-primary-neon: #0a051b;
+      --bg-secondary-neon: rgba(18, 10, 36, 0.8);
+      --bg-tertiary-neon: rgba(30, 20, 55, 0.6);
+      --text-primary-neon: #f3efff;
+      --text-secondary-neon: #a99fc6;
+      --text-muted-neon: #6e648c;
+      --border-color-neon: rgba(189, 0, 255, 0.2);
+      --border-glow-neon: rgba(0, 243, 255, 0.15);
+      --card-shadow-neon: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --glass-bg-neon: rgba(18, 10, 36, 0.7);
+      --glass-border-neon: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Reset & base styling for login */
+    body.login-body {
+      background-color: var(--bg-primary-neon) !important;
+      background-image: 
+        radial-gradient(at 10% 20%, rgba(189, 0, 255, 0.15) 0px, transparent 50%),
+        radial-gradient(at 90% 80%, rgba(0, 243, 255, 0.15) 0px, transparent 50%) !important;
+      font-family: 'Space Grotesk', sans-serif !important;
+      color: var(--text-primary-neon) !important;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-bg-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('iit_ropar_gate.jpeg');
+      background-size: cover;
+      background-position: center;
+      z-index: -1;
+      opacity: 0.25;
+      transition: filter 0.1s ease;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+      padding: 2rem;
+      z-index: 5;
+    }
+
+    .login-card {
+      background: var(--glass-bg-neon);
+      border: 2px solid var(--border-color-neon);
+      backdrop-filter: blur(16px);
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 15px 40px rgba(189, 0, 255, 0.2), var(--card-shadow-neon);
+      margin-bottom: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    .role-selector-tabs {
+      display: flex;
+      background: var(--bg-tertiary-neon);
+      padding: 0.35rem;
+      border-radius: 30px;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .role-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-secondary-neon);
+      padding: 0.6rem 1rem;
+      border-radius: 25px;
+      cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .role-tab.active {
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink));
+      color: #fff;
+      box-shadow: 0 0 12px rgba(189, 0, 255, 0.4);
+    }
+
+    .input-group-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .input-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: left;
+    }
+
+    .input-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary-neon);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .login-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.85rem 1.2rem;
+      background: var(--bg-secondary-neon);
+      border: 1.5px solid var(--border-color-neon);
+      border-radius: 12px;
+      color: var(--text-primary-neon);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    .login-input:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+    }
+
+    .btn-login-submit {
+      width: 100%;
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink));
+      border: none;
+      padding: 1rem;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(189, 0, 255, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-login-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 25px rgba(0, 243, 255, 0.6);
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+      border-radius: 8px;
+      box-shadow: 0 0 15px var(--neon-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .logo-section h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.8rem;
+      margin: 0;
+      background: linear-gradient(90deg, var(--text-primary-neon), var(--neon-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .login-error-msg {
+      background: rgba(255, 49, 49, 0.15);
+      border: 1px solid var(--neon-red);
+      color: var(--neon-red);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      font-family: 'Space Grotesk', sans-serif;
+      display: none;
+      text-shadow: 0 0 5px rgba(255, 49, 49, 0.3);
+    }
+
+    .login-footer-info {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted-neon);
+      margin-top: 1.5rem;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .login-footer-info code {
+      color: var(--neon-cyan);
+    }
+
+    /* Adjuster styles */
+    .bg-adjuster-widget {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    .btn-adjuster-toggle {
+      background: var(--bg-tertiary-neon);
+      border: 1px solid var(--border-color-neon);
+      color: var(--text-primary-neon);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .adjuster-panel {
+      display: none;
+      background: var(--bg-secondary-neon);
+      border: 1px solid var(--border-color-neon);
+      border-radius: 8px;
+      padding: 1rem;
+      width: 200px;
+      margin-top: 8px;
+    }
+
+    .adjuster-panel.active {
+      display: block;
+    }
+
+    .adjuster-panel h4 {
+      font-size: 0.8rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color-neon);
+      padding-bottom: 0.25rem;
+    }
+
+    .adjuster-row {
+      margin-bottom: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .adjuster-row label {
+      font-size: 0.7rem;
+      color: var(--text-secondary-neon);
+    }
+
+    @keyframes shake-horizontal {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+  </style>
 </head>
 <body class="login-body">
+
+  <!-- Background Image -->
+  <div class="login-bg-image" id="login-bg-image"></div>
+
+  <!-- Background Adjuster Widget -->
+  <div class="bg-adjuster-widget">
+    <button class="btn-adjuster-toggle" onclick="toggleAdjusterPanel()" aria-label="Adjust Background">⚙️ Adjust BG</button>
+    <div id="adjuster-panel" class="adjuster-panel">
+      <h4>Background Filters</h4>
+      <div class="adjuster-row">
+        <label for="slider-opacity">Opacity: <span id="val-opacity">25%</span></label>
+        <input type="range" id="slider-opacity" min="10" max="100" value="25" oninput="updateBgFilter('opacity', this.value)">
+      </div>
+      <div class="adjuster-row">
+        <label for="slider-blur">Blur: <span id="val-blur">0px</span></label>
+        <input type="range" id="slider-blur" min="0" max="15" value="0" oninput="updateBgFilter('blur', this.value)">
+      </div>
+      <div class="adjuster-row">
+        <label for="slider-grayscale">Grayscale: <span id="val-grayscale">0%</span></label>
+        <input type="range" id="slider-grayscale" min="0" max="100" value="0" oninput="updateBgFilter('grayscale', this.value)">
+      </div>
+    </div>
+  </div>
 
   <div class="login-container">
     
     <!-- Neon logo section -->
-    <div class="logo-section" style="justify-content: center; margin-bottom: 2rem;">
+    <div class="logo-section" style="margin-bottom: 2rem;">
       <div class="logo-icon">S</div>
-      <h1 style="font-size: 1.8rem;">SAMAGAMA <span style="font-weight: 300; font-size: 1rem; letter-spacing: 2px; color: var(--neon-cyan); margin-left: 5px;">PORTAL</span></h1>
+      <h1>SAMAGAMA <span style="font-weight: 300; font-size: 1rem; letter-spacing: 2px; color: var(--neon-cyan); margin-left: 5px;">PORTAL</span></h1>
     </div>
 
     <!-- Login card -->
@@ -67,7 +370,7 @@
 
     <div class="login-footer-info">
       <p>System default admin: <code>admin@gmail.com</code> / password: <code>admin</code></p>
-      <p>Student login accepts any <code>@gmail.com</code> email and any password.</p>
+      <p>Student login accepts any <code>@gmail.com</code> email address.</p>
     </div>
 
   </div>
@@ -127,7 +430,8 @@
         localStorage.setItem('samagama_session', JSON.stringify({
           isLoggedIn: true,
           role: 'student',
-          email: email
+          email: email,
+          password: pass
         }));
         
         // Push initial user-context view state
@@ -173,6 +477,31 @@
       // Clear out active sessions to force re-entry if accessing login directly
       localStorage.removeItem('samagama_session');
     });
+
+    // Background Adjuster Logic
+    let bgOpacity = 25;
+    let bgBlur = 0;
+    let bgGrayscale = 0;
+
+    function toggleAdjusterPanel() {
+      const panel = document.getElementById('adjuster-panel');
+      panel.classList.toggle('active');
+    }
+
+    function updateBgFilter(type, value) {
+      const bg = document.getElementById('login-bg-image');
+      if (type === 'opacity') {
+        bgOpacity = value;
+        document.getElementById('val-opacity').innerText = `${value}%`;
+      } else if (type === 'blur') {
+        bgBlur = value;
+        document.getElementById('val-blur').innerText = `${value}px`;
+      } else if (type === 'grayscale') {
+        bgGrayscale = value;
+        document.getElementById('val-grayscale').innerText = `${value}%`;
+      }
+      bg.style.filter = `blur(${bgBlur}px) opacity(${bgOpacity / 100}) grayscale(${bgGrayscale}%)`;
+    }
   </script>
 
 </body>
