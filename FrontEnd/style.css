@@ -65,6 +65,11 @@
   --urgency-high-bg: rgba(234, 88, 12, 0.1);
   --urgency-medium-bg: rgba(202, 138, 4, 0.1);
   --urgency-low-bg: rgba(22, 163, 74, 0.1);
+
+  /* Gold refinements for Dark Mode legibility */
+  --accent-gold: #e2c28a;
+  --accent-gold-dark: #f6ebd6;
+  --accent-gold-light: rgba(194, 149, 69, 0.25);
 }
 
 /* --- Base Resets & Global Styles --- */
@@ -1847,3 +1852,35 @@ footer a:hover {
 .adjuster-row input[type="range"] {
   width: 100%;
 }
+
+/* --- Dark Theme Contrast Element Adjustments --- */
+[data-theme="dark"] .text-glow-cyan { color: #38bdf8 !important; }
+[data-theme="dark"] .text-glow-purple { color: #c084fc !important; }
+[data-theme="dark"] .text-glow-green { color: #4ade80 !important; }
+
+[data-theme="dark"] .chat-bubble-msg.user {
+  background: var(--accent-navy-light) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .chatbot-bubble {
+  background: var(--accent-navy-light) !important;
+}
+
+/* --- Main Page Background Image --- */
+.main-bg-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background-image: url('iit_ropar_main_bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.27;
+}
+
