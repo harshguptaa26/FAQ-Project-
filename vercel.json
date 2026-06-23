@@ -1,8 +1,23 @@
 {
+  "version": 2,
   "builds": [
     {
       "src": "backend/server.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "excludeFiles": [
+          "node_modules/@huggingface/transformers/**",
+          "node_modules/onnxruntime-node/**",
+          "node_modules/onnxruntime-web/**",
+          "node_modules/tesseract.js/**",
+          "node_modules/tesseract.js-core/**",
+          "node_modules/discord.js/node_modules/**",
+          "node_modules/@discordjs/**",
+          "node_modules/bullmq/**",
+          "node_modules/ioredis/**",
+          "node_modules/@sentry/**"
+        ]
+      }
     },
     {
       "src": "frontend/package.json",
@@ -18,8 +33,8 @@
       "dest": "/backend/server.ts"
     },
     {
-      "src": "/assets/(.*)",
-      "dest": "/frontend/dist/assets/$1"
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
+      "dest": "/frontend/dist/$1"
     },
     {
       "src": "/(.*)",
