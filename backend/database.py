@@ -6,6 +6,10 @@ from embeddings import get_embedding, get_embedding_dim, get_embeddings_batch
 
 COLLECTION_NAME = "samagama_faqs"
 
+# Remote Cloud Qdrant
+QDRANT_URL = os.getenv("QDRANT_URL", None)
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
+
 # Use local storage by default
 DB_PATH = os.getenv("QDRANT_PATH", "./qdrant_db")
 # If using remote host (e.g., in docker-compose)
@@ -14,7 +18,9 @@ DB_PORT = int(os.getenv("QDRANT_PORT", "6333"))
 
 def get_db_client() -> QdrantClient:
     """Returns a Qdrant client connection."""
-    if DB_HOST:
+    if QDRANT_URL and QDRANT_API_KEY:
+        return QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+    elif DB_HOST:
         return QdrantClient(host=DB_HOST, port=DB_PORT)
     else:
         # Create directory if it doesn't exist

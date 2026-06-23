@@ -7,7 +7,10 @@ from typing import Dict, Any, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "users.db")
+if os.getenv("VERCEL") == "1":
+    DB_FILE = "/tmp/users.db"
+else:
+    DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "users.db")
 JWT_SECRET = os.getenv("JWT_SECRET", "samagama-security-jwt-secret-key-9988")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 hours
