@@ -2,6 +2,7 @@
 
 > **An intelligent FAQ system that continuously learns from student interactions, identifies confusion hotspots, prioritizes critical information, and helps administrators improve communication automatically.**
 https://faq-eta-six.vercel.app/
+> https://faq-project-5otr.onrender.com 
 ---
 
 ## 📖 Overview
