@@ -1,128 +1,500 @@
-# Shamagama (Yaksha FAQ Portal)
+# 🚀 SAMAGAMA – AI-Powered Self-Learning FAQ & Student Intelligence Portal
 
-Full-stack FAQ portal with semantic vector search, AI-powered community moderation, and an expert promotion layer. Built to handle 1 million registered users.
-
-GitHub: https://github.com/vicharanashala/crowd-source-faq
-Full reference: [`docs/`](docs/README.md) · [Contributing](./CONTRIBUTING.md) · [Code of Conduct](./CODE_OF_CONDUCT.md) · [License](./LICENSE)
+> **An intelligent FAQ system that continuously learns from student interactions, identifies confusion hotspots, prioritizes critical information, and helps administrators improve communication automatically.**
 
 ---
 
-## Vision
+## 📖 Overview
 
-**Automate the FAQ lifecycle end-to-end. Zero people in the loop. Reduce the operational FAQ culture.**
+**SAMAGAMA** transforms a traditional FAQ portal into a **living knowledge system**.
 
-Every question a user has has been asked before — and most will be asked again. The right answer should be there before the user finishes typing. The platform achieves this through four zero-touch pillars:
+Instead of being a static list of questions, every student interaction—searches, clicks, votes, reading behavior, and navigation—becomes valuable data that helps the portal improve itself.
 
-- **Zero-touch ingestion** — Zoom meetings, webhooks, and manual uploads feed the knowledge base without human scheduling, categorising, or approval.
-- **Zero-touch answering** — A 24-hour scheduler matches unanswered posts against the knowledge base; high-confidence matches auto-post, low-confidence escalate to humans.
-- **Zero-touch quality control** — Approved FAQs are re-evaluated every 6 hours; drift, contradictions, and staleness are detected and flagged automatically.
-- **Zero-touch user lifecycle** — Deletion is anonymisation, not destruction. Reputation, attribution, and audit history persist.
-
-The platform is the operator. People handle exceptions, not the steady state.
+The platform combines **AI, semantic search, analytics, and community intelligence** to reduce duplicate questions, surface important information automatically, and provide administrators with actionable insights.
 
 ---
 
-## About
+# 🌟 What Makes SAMAGAMA Different?
 
-Samagama (internally "Yaksha FAQ Portal") turns an organisation's accumulated conversations into a searchable, self-maintaining FAQ. It combines hybrid vector + keyword search with a community Q&A board and a fully automated ingestion pipeline that pulls transcripts from Zoom, extracts Q&A with AI, and indexes them for retrieval in seconds.
+Traditional FAQ systems only answer questions.
 
-Built for organisations whose community generates more questions than a human team can answer — student cohorts, open-source projects, internal forums, customer-success communities. Target scale: 1 million registered users with constant conversational input.
+**SAMAGAMA understands them.**
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the architecture deep-dive and [docs/PIPELINES.md](docs/PIPELINES.md) for pipeline internals.
+It continuously learns:
 
----
+* Which questions confuse students
+* Which answers are outdated
+* Which topics create panic
+* Which FAQs need improvement
+* What students are likely to ask next
 
-## Tech Stack
-
-| Layer | Technologies |
-|---|---|
-| Frontend | React 18, Vite, TypeScript, Tailwind CSS, Framer Motion, Axios, Recharts, React Router 6, Vitest |
-| Backend | Node.js, Express 4, TypeScript (ESM), Mongoose 8, JWT, bcryptjs, Helmet, CORS, Morgan, Multer, Zod, express-rate-limit, dotenv, OpenAI SDK, Vitest |
-| Database & Storage | MongoDB Atlas (with Vector Search), Upstash Redis (optional), LRU cache, Cloudinary |
-| Search & AI | Xenova/transformers (768-dim local embeddings), Atlas Vector Search, $text search, Reciprocal Rank Fusion |
-| AI Providers | Anthropic, OpenAI, XAI, MiniMax (per-pipeline configurable) |
-| DevOps | Sentry, Ngrok (local webhook tunnel), Twilio (SMS), SMTP, Vitest |
+The result is an FAQ portal that **gets smarter every day.**
 
 ---
 
-## Quick Start
+# ✨ Core Features
 
-```bash
-./run.sh        # Full-stack runner: env setup, ngrok, backend + frontend
+## 🔴 1. Priority Heatmap (Smart FAQ Ranking)
+
+Every FAQ receives a **dynamic urgency score** based on real student interactions.
+
+Signals include:
+
+* Duplicate searches
+* Click frequency
+* Thumbs-down feedback
+* Unresolved queries
+* Search popularity
+
+Priority Levels
+
+| Level       | Color  | Description                                      |
+| ----------- | ------ | ------------------------------------------------ |
+| 🔴 Critical | Red    | Frequently asked, unresolved, or policy-critical |
+| 🟠 High     | Orange | Common questions with increasing activity        |
+| 🟡 Medium   | Yellow | Occasionally asked                               |
+| 🟢 Low      | Green  | Rarely accessed                                  |
+
+### UI Enhancements
+
+* Left colored priority border
+* Subtle background tint
+* Priority badge
+* Automatic sorting by urgency
+* Admin sort toggle
+
+The highest-priority FAQs automatically float to the top, ensuring students see the most important information first.
+
+---
+
+## 🔍 2. Smart Similar Questions
+
+Whenever a student opens an FAQ, SAMAGAMA automatically recommends related questions.
+
+Example:
+
+**Opening**
+
+> "When will NOC dates be announced?"
+
+Suggested Questions
+
+* NOC Document Requirements
+* Deadline Extension Policy
+* Internship Timeline
+* Application Status Tracking
+
+Recommendations are generated using:
+
+* TF-IDF similarity
+* Semantic embeddings
+* Category matching
+* User navigation history
+
+Categories include:
+
+* NOC
+* ViBe
+* Certificates
+* Internship
+* Rosetta
+* Placements
+
+This significantly reduces repeated searches and support tickets.
+
+---
+
+## ⚡ 3. Live Search with Intent Detection
+
+The search bar provides real-time intelligent suggestions while the student types.
+
+Features include:
+
+* Instant search results
+* Semantic search
+* Fuzzy typo correction
+* "Did you mean?" suggestions
+* Intent detection
+
+Recognized intents include:
+
+* When
+* How
+* Who
+* Where
+* Why
+* Deadline
+* Eligibility
+* Documents
+
+Typing:
+
+```
+noc doc
 ```
 
-`run.sh` prompts for `MONGODB_URI` and `JWT_SECRET` on first run, then saves them to `backend/.env.local`. The script will not overwrite existing values. Session logs are written to `logs/session_*.txt`.
+Instantly surfaces:
+
+* NOC Documents
+* Required Certificates
+* Application Checklist
+
+before the student even finishes typing.
 
 ---
 
-## Key Features
+## 👍 4. Feedback & Unresolved Tracker
 
-Eight flagship capabilities define this platform:
-
-- **Zoom transcript ingestion with per-user OAuth** — Each user connects their own Zoom account via OAuth. Webhook-fired downloads parse VTT transcripts, extract Q&A pairs via AI, and dual-publish: `ZoomInsight` (admin-reviewed) and `TranscriptKnowledge` (auto-approved, immediately vector-searchable). Includes retry + dead-letter queue for failed meetings and admin backfill for historical meetings. See [docs/PIPELINES.md#4-zoom-ingestion-pipeline](docs/PIPELINES.md).
-- **AI auto-answer pipeline for community posts** — A scheduler (every 24h) — and a one-click **Run AI** button in the admin dashboard — finds unanswered posts and searches **all three knowledge sources in parallel** (FAQ + Community Q&A + Transcript Knowledge). Best match above ≥0.85 confidence auto-posts; 0.60–0.84 queues for human review; below 0.60 (or sensitive content) escalates. When no direct match exists, the LLM is given the top gathered context to synthesize an answer. Per-pipeline AI provider configurable. See [docs/PIPELINES.md#1-auto-answer-pipeline](docs/PIPELINES.md).
-- **FAQ audit pipeline** — A scheduler (every 6h) re-evaluates approved FAQs against the live knowledge base (TranscriptKnowledge + ZoomInsights). Uses AI to judge correctness and emits verdicts: `correct` (≥0.80), `drift_detected` (0.60–0.79), `contradiction` (<0.60), or `stale`. Flagged FAQs land in `/admin/faqs/review` with `reviewStatus='pending_review'`, `flagType='auto'`, and an incremented `reviewCycle`. See [docs/PIPELINES.md#2-faq-audit-pipeline](docs/PIPELINES.md).
-- **FAQ freshness & staleness detection** — Every approved FAQ carries a `freshness_tier` (`evergreen` / `seasonal` / `volatile`) and a per-tier review interval. A daily cron auto-flags FAQs whose last-verified date exceeds the interval, opening a peer-review window on `/admin/faqs/review`. Anyone can vote `still_accurate` / `needs_update`; the threshold auto-verifies, otherwise it escalates to a moderator. `FreshnessBadge` on the public FAQ card surfaces verified-vs-under-review status. See [docs/PIPELINES.md#7-faq-freshness-pipeline](docs/PIPELINES.md).
-- **Golden Ticket — Spurti Points escalation** — A premium user-driven escalation channel. Users spend Spurti Points (SP) to bump a time-sensitive query to the top of the admin queue (higher SP = higher priority). SP is consumed on submission; a 48h cooldown blocks repeat submissions. Admins resolve or reject — no penalty, no ban, just a single unified cooldown rule. Includes a live Escalation Queue (right column on `/golden`) sorted by SP spend, anonymous to non-admin viewers. Toggleable from `/admin/features`.
-- **Batch management + public guest FAQ portal** — FAQs, categories, and analytics are scoped to a `Batch` (cohort, term, program). A first-class `Category` model replaces the old free-text field. Guests land on `/explore/select` to pick a batch, then browse the public FAQ at `/faq` with no account required. Admin can create/archive batches and promote FAQs between them. See [docs/BATCH_MANAGEMENT_PLAN.md](docs/BATCH_MANAGEMENT_PLAN.md).
-- **Schema-driven context fields per support category** — Each support category (`internet`, `camera`, `microphone`, `device`, `power`, `other`) has an admin-editable schema of context fields (text, textarea, number, date, boolean, dropdown). Admins add, edit, reorder, or archive fields from `/admin/support/categories` without redeploying. The frontend renders dynamic inputs from the live schema. See [docs/SCHEMA_DRIVEN_CONTEXT_PLAN.md](docs/SCHEMA_DRIVEN_CONTEXT_PLAN.md).
-- **Soft-delete with anonymization** — Deleting a user never hard-deletes their records. The account is anonymised: `isDeleted=true`, `deletedAt` timestamp, `name` becomes `Deleted User`, `email` is rewritten to a non-routable placeholder, `password` is replaced with a random UUID to break login. All posts, comments, votes, reputation logs, and audit trail entries remain intact — preserving referential integrity, attribution history, and regulatory compliance.
-
-Other capabilities: semantic hybrid search, community Q&A board, reputation system + badges + leaderboard, SpillTheTea event-driven notifications, per-user Zoom OAuth, RAG-powered `/ask-ai` assistant with image + file attachments, soft user lifecycle, experimental feature flags, support tickets (troubleshoot → admin triage → resolution).
-
----
-
-## Admin Dashboard
-
-The admin panel at `/admin` (mounted at `/api/admin/*`) provides telemetry, moderation, and operational control. Key areas:
-
-- **Telemetry & analytics** — live stats, FAQ growth, top categories, search insights, user-activity charts, activity feed, failed-query analytics, unresolved-search tracker
-- **Operational pages** — AdminDashboard, AdminFAQs, FaqReview, AdminFAQAudit, AdminAutoAnswerQueue, AdminCommunity, AdminUsers, AdminModeration, AdminZoomMeetings, AdminZoomInsights, AdminLeaderboard, AdminUnresolvedSearch, AdminAISettings, AdminSettings, AdminLogin
-- **Moderation** — every ban, suspend, warn, and soft-delete recorded in `ModerationLog`; every reputation change (+2 upvote, +5 accepted answer, -2/-5 on removal) recorded in `ReputationLog`
-- **AI pipeline visibility** — unified `PipelineResult` collection (30-day TTL) for both auto-answer and audit outcomes; Zoom health endpoint reports OAuth/API circuit state, cache hit rate, failing-meetings count, dead-letter count, pending-retry count; Prometheus metrics at `/api/metrics` (search latency, cache hits, RAG duration, queue depth)
-
-For the full admin route map and per-page behaviour, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
----
-
-## User Experience
-
-The user-facing app (`/`, `/faq`, `/community`, `/saved`, `/account`, `/leaderboard`) gives authenticated users full participation in the knowledge loop:
-
-- **Discover** — hybrid semantic + keyword search at `/api/search` (public), semantic suggestions at `/api/search/suggest`, category browsing
-- **Ask the community** — post creation with Zod validation, debounced duplicate detection against the FAQ base (banner + block on match), auto-normalised tags, Cloudinary image attachments
-- **Engage** — upvotes with reputation-farming prevention (reverses on removal), bookmarks at `/saved`, nested comment threads with optimistic UI, accept-answer (locks verified/expert comments from edit), edit/delete own comments, share via clipboard, report and flag-outdated
-- **Notifications** — in-app bell, SpillTheTea event stream (`post_answered`, `post_deleted`, etc.), per-event-type settings, email + SMS delivery
-- **Reputation** — points for accepted answers, badges at thresholds, expert promotion by peer vote, public leaderboard
-- **AI assistant** — RAG-powered `/ask-ai` (5/day anonymous quota via localStorage, unlimited for authenticated users), sources cited, **accepts file and image attachments (max 4 files, 10 MB each) — images sent as vision input, text files inlined into the prompt**
-- **Zoom integration** — per-user OAuth from `/account`, manual `.vtt` / `.txt` / raw-text upload, last-synced status card, no admin required
-- **Search feedback** — "Report missing FAQ" on zero results, admin-promotable to FAQ
-
-For per-route behaviour and field schemas, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
----
-
-## Project Structure
+Each FAQ includes lightweight feedback.
 
 ```
-Shamagama/
-├── backend/           # Express + TypeScript API
-├── frontend/          # React + Vite SPA
-├── docs/              # Full documentation      
-└── run.sh             # Local dev runner (env setup, ngrok, backend + frontend)
+👍 Helpful
+
+👎 Didn't Help
 ```
 
+Negative feedback automatically:
+
+* increases urgency score
+* flags weak answers
+* updates admin analytics
+* contributes to confusion detection
+
+Administrators can instantly identify which FAQs require improvement.
+
 ---
 
-## Environment Variables
+# 💡 Additional Intelligence Features
 
-Required: `MONGODB_URI`, `JWT_SECRET`
-Optional: at least one AI provider key (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `XAI_API_KEY` / `MINIMAX_API_KEY`), Zoom OAuth credentials, `CLOUDINARY_*`, `SENTRY_DSN`, Twilio + SMTP for notifications, `UPSTASH_REDIS_*`
+## 🫧 Doubt Cluster Map
 
-See [docs/ARCHITECTURE.md#10-env-variables-reference](docs/ARCHITECTURE.md#10-env-variables-reference) for the full list.
+One of the platform's signature features.
+
+A live interactive bubble chart visualizes the entire FAQ ecosystem.
+
+Bubble Size
+
+→ Number of questions asked
+
+Bubble Color
+
+* 🔴 Critical
+* 🟠 High
+* 🟡 Medium
+* 🟢 Healthy
+
+Bubble Position
+
+→ FAQ category
+
+Example
+
+```
+🔴 NOC
+
+🟠 Internship
+
+🟠 Certificates
+
+🟢 Rosetta
+
+🟢 ViBe
+```
+
+Within seconds, administrators understand where students are struggling most.
 
 ---
 
-## License
+## 📈 Trending This Week
 
-[MIT](./LICENSE) © 2026 vicharanashala
+A rolling 7-day analytics engine automatically identifies the most searched FAQs.
+
+Example
+
+🔥 Trending This Week
+
+1. NOC Dates
+2. Internship Allocation
+3. ViBe Registration
+4. Certificate Submission
+5. Hostel Allotment
+
+This dynamic list updates automatically and helps students discover commonly discussed topics.
+
+---
+
+## 📚 Section Completion Tracker
+
+Students see their reading progress across FAQ categories.
+
+Example
+
+```
+You've completed
+
+████████░░░░
+
+8 / 14 FAQ Sections
+```
+
+Progress is stored locally using **localStorage** and encourages students to explore all critical information.
+
+---
+
+## 📢 Admin Urgency Override
+
+Administrators can manually promote important announcements.
+
+Example
+
+```
+🚨 Updated Policy
+
+NOC submission deadline revised.
+
+Please read before applying.
+```
+
+Features
+
+* Manual Critical badge
+* Banner announcement
+* Priority override
+* Admin notes
+* Expiration support
+
+Ideal for sudden policy changes or urgent announcements.
+
+---
+
+# 🧠 FAQ Intelligence Engine
+
+The heart of SAMAGAMA.
+
+Instead of static content, the portal continuously learns from user behavior.
+
+Every interaction becomes a learning signal.
+
+Collected Signals
+
+* Search queries
+* FAQ views
+* Clicks
+* Reading time
+* Thumbs up
+* Thumbs down
+* Related FAQ navigation
+* Duplicate questions
+* Search failures
+
+These signals power every intelligent feature within the system.
+
+---
+
+# 👨‍🎓 Student Experience
+
+## Smart Priority FAQs
+
+Important questions automatically rise to the top.
+
+Students immediately know what deserves attention.
+
+---
+
+## Related Question Graph
+
+Reading one FAQ reveals the next logical questions.
+
+Students naturally discover complete information without repeated searching.
+
+---
+
+## Trending Questions
+
+Students gain confidence knowing their concerns are shared by others.
+
+---
+
+## Progress Tracker
+
+Students know exactly which sections they've completed and which remain unread.
+
+---
+
+# 👨‍💼 Admin Experience
+
+## 🔥 Confusion Heatmap Dashboard
+
+Instead of manually reviewing hundreds of questions, administrators receive an instant overview.
+
+| Section      | Confusion Score |
+| ------------ | --------------: |
+| NOC          |              92 |
+| Internship   |              77 |
+| Certificates |              48 |
+| ViBe         |              31 |
+| Rosetta      |              12 |
+
+Higher scores indicate greater confusion and higher priority.
+
+---
+
+## 🫧 Doubt Cluster Visualization
+
+Interactive bubble chart displaying:
+
+* Bubble size → question volume
+* Bubble color → urgency
+* Bubble position → FAQ category
+
+This visualization immediately highlights communication gaps and is one of the project's most impactful demonstrations.
+
+---
+
+## 🤖 Self-Healing FAQ Suggestions
+
+The system proactively recommends improvements.
+
+Examples
+
+> Question 3.4 received 28 thumbs-downs this week.
+
+Suggested Action
+
+→ Rewrite the answer.
+
+---
+
+> 41 students searched for "deadline extension", but no FAQ exists.
+
+Suggested Action
+
+→ Create a new FAQ.
+
+The portal continuously evolves without requiring constant manual analysis.
+
+---
+
+## 🚨 Panic Mode Detection
+
+Detects sudden spikes in student activity.
+
+Example
+
+Yesterday
+
+```
+NOC Searches
+
+20
+```
+
+Today
+
+```
+250
+```
+
+The system automatically:
+
+* creates a Panic Alert
+* increases NOC priority
+* moves related FAQs to the top
+* notifies administrators
+
+This enables rapid response during critical periods.
+
+---
+
+## 🔮 Ask Before Asking Predictor
+
+Using navigation patterns, SAMAGAMA predicts what a student is likely to ask next.
+
+Example
+
+Opening:
+
+> How do I apply for NOC?
+
+Automatically recommends:
+
+* Required Documents
+* Last Date
+* Approval Timeline
+* Application Status
+
+Inspired by recommendation systems used by major e-commerce platforms, this dramatically reduces repetitive support requests.
+
+---
+
+# 🏗 Technical Architecture
+
+### Frontend
+
+* React
+* TypeScript
+* Tailwind CSS
+* Framer Motion
+* React Router
+* Recharts
+* LocalStorage
+
+### Backend
+
+* Node.js
+* Express
+* TypeScript
+* MongoDB Atlas
+* JWT Authentication
+
+### Intelligence Layer
+
+* MongoDB Atlas Vector Search
+* TF-IDF Similarity
+* Semantic Embeddings
+* Click Analytics
+* Trending Engine
+* Priority Scoring Algorithm
+* Recommendation Engine
+
+---
+
+# 👥 Team Structure (10 Members)
+
+## 🎨 UI / Frontend (4)
+
+* Priority color system & badges
+* Live search & instant results
+* Smart similar questions panel
+* Bubble chart & cluster visualization
+
+---
+
+## ⚙ Backend / Data (4)
+
+* Click & vote tracking APIs
+* Dynamic priority scoring algorithm
+* TF-IDF similarity engine
+* Trending window analytics
+
+---
+
+## 📊 Admin Dashboard (2)
+
+* Urgency override interface
+* Unresolved cluster dashboard
+* Analytics graphs
+* Confusion heatmap
+* Self-healing recommendations
+
+---
+
+# 🚀 Impact
+
+SAMAGAMA is more than an FAQ portal.
+
+It is a **self-learning knowledge platform** that continuously improves based on real student behavior.
+
+By combining **AI-powered recommendations, intelligent search, behavioral analytics, semantic similarity, real-time trend detection, and administrator insights**, SAMAGAMA reduces repetitive support requests, surfaces the most important information automatically, and ensures students always have access to the knowledge they need.
+
+Instead of maintaining a static FAQ, institutions gain an **adaptive FAQ Intelligence Engine** that evolves alongside their community.
