@@ -19,7 +19,12 @@ app = FastAPI(
     description="FastAPI service for semantic search, scraping, and hybrid ranking of samagama.in FAQs.",
     version="1.0.0"
 )
-
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "message": "FAQ Backend is running"
+    }
 # Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
