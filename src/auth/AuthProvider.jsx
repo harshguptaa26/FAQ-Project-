@@ -4,59 +4,88 @@ import * as userService from '../services/userService';
 import * as analyticsService from '../services/analyticsService';
 
 const STORAGE_KEY = 'samagama_auth';
-const ADMIN_EMAIL = 'admin123@gmail.com';
-const ADMIN_PASSWORD = '1234567890';
-
-function loadStoredUser() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return null;
-}
+const TOKEN_KEY = 'samagama_token';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 export default function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(loadStoredUser);
+  const [currentUser, setCurrentUser] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const isLoggedIn = !!currentUser;
   const userRole = currentUser?.role || null;
   const isAdmin = userRole === 'admin';
 
+  // Initialize and verify user from stored token on mount
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
+    async function verifyToken() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (res.ok) {
+          const user = await res.json();
+          setCurrentUser(user);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+        } else {
+          // Token is invalid/expired
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(STORAGE_KEY);
+          setCurrentUser(null);
+        }
+      } catch (e) {
+        console.error("Token verification error:", e);
+        // On network error, fallback to stored user to keep UI responsive
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) setCurrentUser(JSON.parse(stored));
+        } catch {}
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [currentUser]);
+
+    verifyToken();
+  }, []);
 
   const login = useCallback(async (email, password) => {
-    // Mock — accept any non-empty credentials for students
     if (!email || !password) throw new Error('Email and password are required.');
-    if (password.length < 4) throw new Error('Invalid credentials.');
 
-    // Check if user already exists
-    const existing = userService.getUserByEmail(email);
-    let user;
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
 
-    if (existing) {
-      user = existing;
-      userService.updateLastActive(existing.id);
-    } else {
-      user = {
-        id: 'usr_' + Date.now(),
-        name: email.split('@')[0],
-        email,
-        role: 'student',
-        avatar: null,
-        createdAt: new Date().toISOString(),
-      };
-      userService.registerUser(user);
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Invalid email or password.');
     }
 
+    const data = await res.json();
+    const token = data.access_token;
+    const user = data.user;
+
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     setCurrentUser(user);
+
+    // Sync with local userService cache for metrics
+    userService.registerUser(user);
+    userService.updateLastActive(user.id);
 
     analyticsService.logActivity({
       userId: user.id,
@@ -74,43 +103,55 @@ export default function AuthProvider({ children }) {
     if (password !== confirmPassword) throw new Error('Passwords do not match.');
     if (password.length < 6) throw new Error('Password must be at least 6 characters.');
 
-    const user = {
-      id: 'usr_' + Date.now(),
-      name,
-      email,
-      role: 'student',
-      avatar: null,
-      createdAt: new Date().toISOString(),
-    };
+    const registerRes = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name, email, password, role: 'student' })
+    });
 
-    userService.registerUser(user);
+    if (!registerRes.ok) {
+      const errorData = await registerRes.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Registration failed.');
+    }
 
-    setCurrentUser(user);
+    // Automatically login after successful signup
+    return login(email, password);
+  }, [login]);
+
+  const adminLogin = useCallback(async (email, password) => {
+    if (!email || !password) throw new Error('Email and password are required.');
+
+    const res = await fetch(`${API_BASE}/auth/admin-login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Invalid administrator credentials.');
+    }
+
+    const data = await res.json();
+    const token = data.access_token;
+    const admin = data.user;
+
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(admin));
+    setCurrentUser(admin);
 
     analyticsService.logActivity({
-      userId: user.id,
-      userName: user.name,
-      email: user.email,
-      action: 'signup',
+      userId: admin.id,
+      userName: admin.name,
+      email: admin.email,
+      action: 'admin_login',
       interactionType: 'auth',
     });
 
-    return user;
-  }, []);
-
-  const adminLogin = useCallback(async (email, password) => {
-    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-      throw new Error('Invalid administrator credentials.');
-    }
-    const admin = {
-      id: 'admin_001',
-      name: 'Administrator',
-      email: ADMIN_EMAIL,
-      role: 'admin',
-      avatar: null,
-      createdAt: new Date().toISOString(),
-    };
-    setCurrentUser(admin);
     return admin;
   }, []);
 
@@ -124,6 +165,8 @@ export default function AuthProvider({ children }) {
         interactionType: 'auth',
       });
     }
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(STORAGE_KEY);
     setCurrentUser(null);
     setPendingAction(null);
   }, [currentUser]);
@@ -143,6 +186,7 @@ export default function AuthProvider({ children }) {
     userRole,
     isLoggedIn,
     isAdmin,
+    isLoading,
     login,
     signup,
     adminLogin,

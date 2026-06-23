@@ -115,7 +115,13 @@ function App() {
   const triggerScrape = async () => {
     setIsScraping(true);
     try {
-      const res = await fetch(`${API_BASE}/scrape`, { method: "POST" });
+      const token = localStorage.getItem('samagama_token');
+      const res = await fetch(`${API_BASE}/scrape`, {
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (res.ok) {
         alert("Scraper triggered! Updating in background...");
         // Poll status to watch for completion

@@ -38,7 +38,7 @@ services:
   # React Frontend Service
   frontend:
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile
     container_name: faq-frontend
     ports:

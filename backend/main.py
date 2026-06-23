@@ -1,9 +1,9 @@
 import os
 import sys
 import traceback
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 
 # Ensure local backend imports resolve correctly regardless of search path
@@ -13,6 +13,15 @@ from scraper import scrape_faq
 from database import init_db, index_faqs, search_faqs_vector, get_all_indexed_faqs
 from ranking import calculate_hybrid_scores
 from llm_grounding import generate_grounded_answer
+from auth import (
+    init_user_db,
+    register_user,
+    get_user_by_email,
+    verify_password,
+    create_access_token,
+    get_current_user,
+    get_admin_user
+)
 
 app = FastAPI(
     title="Samagama FAQ Semantic Search API",
@@ -29,7 +38,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Pydantic schemas
+# Pydantic schemas for Auth
+class UserRegister(BaseModel):
+    name: str = Field(..., min_length=2, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=6, max_length=100)
+    role: Optional[str] = "student"
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserProfile(BaseModel):
+    id: str
+    name: str
+    email: str
+    role: str
+    createdAt: str
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserProfile
+
+# Pydantic schemas for FAQ
 class AskRequest(BaseModel):
     query: str = Field(..., description="The user's search query or question", min_length=1, max_length=500)
 
@@ -62,8 +94,9 @@ _indexing_status = {
 
 @app.on_event("startup")
 def startup_event():
-    """Startup routine to initialize collection and do a first-time scrape if empty."""
+    """Startup routine to initialize collection, setup users database, and do initial FAQ scrape if empty."""
     init_db()
+    init_user_db()
     try:
         faqs = get_all_indexed_faqs()
         if not faqs:
@@ -81,7 +114,85 @@ def startup_event():
             print(f"Startup check complete. Found {_indexing_status['faq_count']} FAQs in DB.")
     except Exception as e:
         print(f"Error checking or indexing database during startup: {e}")
-        # Don't crash startup if external APIs/DB fail, allow manual re-indexing later.
+
+# --- Authentication Endpoints ---
+
+@app.post("/auth/register", response_model=UserProfile, status_code=status.HTTP_201_CREATED, summary="Register a new student")
+def register(user_in: UserRegister):
+    """Registers a new student user profile."""
+    # Enforce lowercase emails
+    email = user_in.email.lower().strip()
+    try:
+        user = register_user(
+            name=user_in.name.strip(),
+            email=email,
+            password_raw=user_in.password,
+            role=user_in.role
+        )
+        return user
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
+        )
+
+@app.post("/auth/login", response_model=AuthResponse, summary="Student Authentication")
+def login(login_in: UserLogin):
+    """Authenticates a student and returns a JWT access token."""
+    email = login_in.email.lower().strip()
+    user = get_user_by_email(email)
+    
+    if not user or not verify_password(login_in.password, user["password_hash"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password."
+        )
+        
+    token = create_access_token(data={"sub": user["id"], "email": user["email"], "role": user["role"]})
+    
+    # Remove password hash for safety before mapping to pydantic
+    profile = {
+        "id": user["id"],
+        "name": user["name"],
+        "email": user["email"],
+        "role": user["role"],
+        "createdAt": user["created_at"]
+    }
+    
+    return AuthResponse(access_token=token, user=profile)
+
+@app.post("/auth/admin-login", response_model=AuthResponse, summary="Administrator Authentication")
+def admin_login(login_in: UserLogin):
+    """Authenticates an administrator account and returns a JWT access token."""
+    email = login_in.email.lower().strip()
+    user = get_user_by_email(email)
+    
+    if not user or user["role"] != "admin" or not verify_password(login_in.password, user["password_hash"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid administrator credentials."
+        )
+        
+    token = create_access_token(data={"sub": user["id"], "email": user["email"], "role": user["role"]})
+    
+    profile = {
+        "id": user["id"],
+        "name": user["name"],
+        "email": user["email"],
+        "role": user["role"],
+        "createdAt": user["created_at"]
+    }
+    
+    return AuthResponse(access_token=token, user=profile)
+
+@app.get("/auth/me", response_model=UserProfile, summary="Get current logged-in user profile")
+def read_current_user(current_user: dict = Depends(get_current_user)):
+    """Returns the verified profile metadata of the current authenticated user."""
+    return current_user
+
+# --- FAQ Search Endpoints ---
 
 def run_scraper_task():
     """Background task to scrape and index FAQs."""
@@ -100,17 +211,17 @@ def run_scraper_task():
     finally:
         _indexing_status["is_indexing"] = False
 
-@app.post("/scrape", summary="Trigger Scraper and Indexer")
-def trigger_scrape(background_tasks: BackgroundTasks):
+@app.post("/scrape", summary="Trigger Scraper and Indexer (Admin Only)")
+def trigger_scrape(background_tasks: BackgroundTasks, admin_user: dict = Depends(get_admin_user)):
     """
     Manually triggers the BeautifulSoup scraper to re-fetch samagama.in/internship/faq
-    and re-build the Qdrant vector database. Runs asynchronously in the background.
+    and re-build the Qdrant vector database. Requires JWT token with Admin role.
     """
     if _indexing_status["is_indexing"]:
         return {"message": "Indexing is already in progress."}
     
     background_tasks.add_task(run_scraper_task)
-    return {"message": "Scrape and re-index triggered in background."}
+    return {"message": "Scrape and re-index triggered in background by administrator."}
 
 @app.post("/ask", response_model=AskResponse, summary="Query the FAQ search bot")
 def ask_bot(request: AskRequest):
