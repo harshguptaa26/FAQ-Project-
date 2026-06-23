@@ -1,32 +1,23 @@
 {
-  "name": "frontend",
-  "private": true,
-  "version": "0.0.0",
+  "name": "yaksha-faq-e2e-tests",
+  "version": "0.1.0",
   "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "lucide-react": "^1.20.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "test:e2e": "tsx scripts/run-e2e.ts",
+    "test:all": "npm run test --workspace=backend && npm run test:run --workspace=frontend --if-present && npm run test:e2e"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@tailwindcss/postcss": "^4.3.1",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "autoprefixer": "^10.5.0",
-    "eslint": "^10.3.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.6.0",
-    "postcss": "^8.5.15",
-    "tailwindcss": "^4.3.1",
-    "vite": "^8.0.12"
+    "@playwright/test": "^1.44.1",
+    "@types/node": "^25.9.1",
+    "mongodb-memory-server": "^9.2.0",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "sharp": "^0.34.5"
   }
 }
