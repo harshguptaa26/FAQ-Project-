@@ -144,25 +144,25 @@ def search_faqs_vector(query_text: str, limit: int = 15) -> List[Tuple[Dict[str,
     query_vector = get_embedding(query_text, is_query=True)
     
     # Query against question vector
-    res_q = client.search(
+    res_q = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=("question", query_vector),
+        query=("question", query_vector),
         limit=limit,
         with_payload=True
     )
     
     # Query against combined vector
-    res_c = client.search(
+    res_c = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=("combined", query_vector),
+        query=("combined", query_vector),
         limit=limit,
         with_payload=True
     )
     
     # Query against answer vector
-    res_a = client.search(
+    res_a = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=("answer", query_vector),
+        query=("answer", query_vector),
         limit=limit,
         with_payload=True
     )
