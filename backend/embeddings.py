@@ -29,3 +29,6 @@ def get_embedding(text: str, is_query: bool = False) -> List[float]:
 
 def get_embeddings_batch(texts: List[str], is_query: bool = False) -> List[List[float]]:
     return [_hash_embedding(t) for t in texts]
+
+def get_embedding_dim() -> int:
+    return DIM
