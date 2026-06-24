@@ -114,58 +114,57 @@ def trigger_scrape(background_tasks: BackgroundTasks):
 
 @app.post("/ask", response_model=AskResponse, summary="Query the FAQ search bot")
 def ask_bot(request: AskRequest):
-    """
-    Given a user question, performs:
-      1. Vector search against Question, Answer, and Combined vectors in Qdrant.
-      2. Hybrid ranking combining Vector similarity, Keyword overlap, Exact phrase match, and Section match.
-      3. Confidence-level check.
-      4. Grounded answer generation using Gemini / OpenAI.
-    """
     query = request.query.strip()
     if not query:
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
-        
-    try:
-        # 1. Search vector database to get candidates
-        candidates = search_faqs_vector(query, limit=15)
-        
-        if not candidates:
-            # Fallback if DB is completely empty or search fails
-            return AskResponse(
-                answer="I could not find an exact FAQ match. Please log in to Samagama and ask Yaksha.",
-                related_questions=[]
-            )
-            
-        # 2. Calculate hybrid scores
-        scored_results = calculate_hybrid_scores(query, candidates)
-        
-        # 3. Generate grounded answer
-        answer = generate_grounded_answer(query, scored_results)
-        
-        # 4. Format related questions for response (Top 5)
-        related = []
-        for r in scored_results[:5]:
-            # Create a clean preview of the answer
-            raw_ans = r["answer"]
-            preview = raw_ans if len(raw_ans) <= 150 else f"{raw_ans[:147]}..."
-            
-            related.append(RelatedQuestion(
-                question=r["question"],
-                answer_preview=preview,
-                score=r["score"],
-                url=r["url"],
-                section_title=r["section_title"]
-            ))
-            
-        return AskResponse(
-            answer=answer,
-            related_questions=related
-        )
-        
-    except Exception as e:
-        print(f"Error serving search query: {e}")
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+    faqs = get_all_indexed_faqs()
+    if not faqs:
+        raise HTTPException(status_code=404, detail="No FAQs indexed yet. Please run /scrape first.")
+
+    q_terms = [t.lower() for t in query.split() if len(t) > 2]
+    scored = []
+
+    for faq in faqs:
+        question = faq.get("question", "")
+        answer = faq.get("answer", "")
+        text = f"{question} {answer}".lower()
+
+        score = 0
+        for term in q_terms:
+            if term in question.lower():
+                score += 3
+            if term in answer.lower():
+                score += 1
+
+        if query.lower() in question.lower():
+            score += 10
+
+        if score > 0:
+            item = dict(faq)
+            item["score"] = float(score)
+            scored.append(item)
+
+    if not scored:
+        scored = faqs[:5]
+
+    scored.sort(key=lambda x: x.get("score", 0), reverse=True)
+    top = scored[0]
+
+    related = []
+    for item in scored[:5]:
+        related.append({
+            "question": item.get("question", ""),
+            "answer_preview": item.get("answer", "")[:250],
+            "score": float(item.get("score", 0)),
+            "url": item.get("url", ""),
+            "section_title": item.get("section_title", "")
+        })
+
+    return {
+        "answer": top.get("answer", ""),
+        "related_questions": related
+    }
 
 @app.get("/status", response_model=StatusResponse, summary="Get service status and statistics")
 def get_status():
