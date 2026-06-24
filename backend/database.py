@@ -12,12 +12,20 @@ DB_PATH = os.getenv("QDRANT_PATH", "./qdrant_db")
 DB_HOST = os.getenv("QDRANT_HOST", None)
 DB_PORT = int(os.getenv("QDRANT_PORT", "6333"))
 
+_CLIENT = None
+
 def get_db_client() -> QdrantClient:
-    """Returns a Qdrant client connection."""
+    """Returns a single shared Qdrant client connection."""
+    global _CLIENT
+    if _CLIENT is not None:
+        return _CLIENT
+
     if DB_HOST:
-        return QdrantClient(host=DB_HOST, port=DB_PORT)
+        _CLIENT = QdrantClient(host=DB_HOST, port=DB_PORT)
     else:
-        return QdrantClient(":memory:")
+        _CLIENT = QdrantClient(":memory:")
+
+    return _CLIENT
 
 def init_db(force_recreate: bool = False):
     """Initializes the Qdrant FAQ collection with named vectors."""

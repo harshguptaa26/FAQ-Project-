@@ -32,3 +32,6 @@ def get_embeddings_batch(texts: List[str], is_query: bool = False) -> List[List[
 
 def get_embedding_dim() -> int:
     return DIM
+
+def get_embedding_provider() -> str:
+    return "local"
