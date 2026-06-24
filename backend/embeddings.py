@@ -1,119 +1,31 @@
-import os
-from typing import List, Union
-from dotenv import load_dotenv
+import hashlib
+import math
+import re
+from typing import List
 
-load_dotenv()
+DIM = 768
 
-# Pre-initialize clients if keys are present
-_openai_client = None
-_gemini_client_configured = False
+def _tokenize(text: str) -> List[str]:
+    return re.findall(r"[a-zA-Z0-9]+", (text or "").lower())
 
-def get_openai_client():
-    global _openai_client
-    if _openai_client is None:
-        from openai import OpenAI
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is not set.")
-        _openai_client = OpenAI(api_key=api_key)
-    return _openai_client
+def _hash_embedding(text: str) -> List[float]:
+    vec = [0.0] * DIM
+    tokens = _tokenize(text)
 
-def configure_gemini():
-    global _gemini_client_configured
-    if not _gemini_client_configured:
-        import google.generativeai as genai
-        # Look for standard keys
-        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise ValueError("Neither GEMINI_API_KEY nor GOOGLE_API_KEY environment variable is set.")
-        genai.configure(api_key=api_key)
-        _gemini_client_configured = True
+    if not tokens:
+        return vec
 
-def get_embedding_provider() -> str:
-    """
-    Determines the embedding provider from EMBEDDING_PROVIDER environment variable.
-    Falls back to 'gemini' if GEMINI_API_KEY/GOOGLE_API_KEY is present, then 'openai'.
-    """
-    provider = os.getenv("EMBEDDING_PROVIDER", "").lower()
-    if provider in ("gemini", "openai"):
-        return provider
-    
-    if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
-        return "gemini"
-    if os.getenv("OPENAI_API_KEY"):
-        return "openai"
-        
-    # Default fallback
-    return "gemini"
+    for tok in tokens:
+        h = int(hashlib.sha256(tok.encode("utf-8")).hexdigest(), 16)
+        idx = h % DIM
+        sign = 1.0 if (h >> 8) % 2 == 0 else -1.0
+        vec[idx] += sign
 
-def get_embedding_dim() -> int:
-    """Returns vector dimension size: 768 for Gemini (text-embedding-004), 1536 for OpenAI."""
-    provider = get_embedding_provider()
-    if provider == "openai":
-        return 1536
-    return 768
+    norm = math.sqrt(sum(x * x for x in vec)) or 1.0
+    return [x / norm for x in vec]
 
 def get_embedding(text: str, is_query: bool = False) -> List[float]:
-    """
-    Generates a vector embedding for the given text.
-    
-    Parameters:
-      text: The string to embed.
-      is_query: Set to True when embedding a user query (used by Gemini's task_type parameter).
-    """
-    provider = get_embedding_provider()
-    
-    if provider == "openai":
-        client = get_openai_client()
-        # Use text-embedding-3-small as requested
-        model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-        response = client.embeddings.create(
-            input=[text],
-            model=model
-        )
-        return response.data[0].embedding
-    else:
-        # Default to Gemini text-embedding-004
-        configure_gemini()
-        import google.generativeai as genai
-        model = os.getenv("GEMINI_EMBEDDING_MODEL", "models/text-embedding-004")
-        task_type = "retrieval_query" if is_query else "retrieval_document"
-        
-        result = genai.embed_content(
-            model=model,
-            content=text,
-            task_type=task_type
-        )
-        return result["embedding"]
+    return _hash_embedding(text)
 
 def get_embeddings_batch(texts: List[str], is_query: bool = False) -> List[List[float]]:
-    """
-    Generates vector embeddings for a batch of text strings.
-    """
-    if not texts:
-        return []
-        
-    provider = get_embedding_provider()
-    
-    if provider == "openai":
-        client = get_openai_client()
-        model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-        response = client.embeddings.create(
-            input=texts,
-            model=model
-        )
-        # Sort responses by index to ensure order matches input
-        sorted_data = sorted(response.data, key=lambda x: x.index)
-        return [item.embedding for item in sorted_data]
-    else:
-        configure_gemini()
-        import google.generativeai as genai
-        model = os.getenv("GEMINI_EMBEDDING_MODEL", "models/text-embedding-004")
-        task_type = "retrieval_query" if is_query else "retrieval_document"
-        
-        result = genai.embed_content(
-            model=model,
-            content=texts,
-            task_type=task_type
-        )
-        return result["embedding"]
+    return [_hash_embedding(t) for t in texts]
