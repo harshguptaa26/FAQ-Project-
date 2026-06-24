@@ -81,7 +81,7 @@ def get_embedding(text: str, is_query: bool = False) -> List[float]:
         
         result = genai.embed_content(
             model=model,
-            contents=text,
+            content=text,
             task_type=task_type
         )
         return result["embedding"]
@@ -113,7 +113,7 @@ def get_embeddings_batch(texts: List[str], is_query: bool = False) -> List[List[
         
         result = genai.embed_content(
             model=model,
-            contents=texts,
+            content=texts,
             task_type=task_type
         )
         return result["embedding"]
