@@ -17,9 +17,7 @@ def get_db_client() -> QdrantClient:
     if DB_HOST:
         return QdrantClient(host=DB_HOST, port=DB_PORT)
     else:
-        # Create directory if it doesn't exist
-        os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
-        return QdrantClient(path=DB_PATH)
+        return QdrantClient(":memory:")
 
 def init_db(force_recreate: bool = False):
     """Initializes the Qdrant FAQ collection with named vectors."""
