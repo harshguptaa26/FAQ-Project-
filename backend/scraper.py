@@ -1,9 +1,7 @@
 import re
 import json
 from pathlib import Path
-import re
-import json
-from pathlib import Pathquests
+import requests
 from bs4 import BeautifulSoup
 
 FAQ_URL = "https://samagama.in/internship/faq"
