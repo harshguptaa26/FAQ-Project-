@@ -1,6 +1,4 @@
 import re
-import json
-from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 
@@ -37,11 +35,6 @@ def scrape_faq(url: str = FAQ_URL, html_content: str = None) -> dict:
             html_content = response.text
         except Exception as e:
             print(f"Error fetching FAQ page: {e}")
-            fallback = Path("faqs.json")
-            if fallback.exists():
-                print("Using local faqs.json fallback.")
-                with fallback.open("r", encoding="utf-8") as f:
-                    return json.load(f)
             raise e
 
     soup = BeautifulSoup(html_content, "html.parser")

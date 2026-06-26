@@ -12,20 +12,14 @@ DB_PATH = os.getenv("QDRANT_PATH", "./qdrant_db")
 DB_HOST = os.getenv("QDRANT_HOST", None)
 DB_PORT = int(os.getenv("QDRANT_PORT", "6333"))
 
-_CLIENT = None
-
 def get_db_client() -> QdrantClient:
-    """Returns a single shared Qdrant client connection."""
-    global _CLIENT
-    if _CLIENT is not None:
-        return _CLIENT
-
+    """Returns a Qdrant client connection."""
     if DB_HOST:
-        _CLIENT = QdrantClient(host=DB_HOST, port=DB_PORT)
+        return QdrantClient(host=DB_HOST, port=DB_PORT)
     else:
-        _CLIENT = QdrantClient(":memory:")
-
-    return _CLIENT
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
+        return QdrantClient(path=DB_PATH)
 
 def init_db(force_recreate: bool = False):
     """Initializes the Qdrant FAQ collection with named vectors."""
@@ -135,20 +129,53 @@ def get_all_indexed_faqs() -> List[Dict[str, Any]]:
     points = results[0]
     return [p.payload for p in points]
 
-def search_faqs_vector(query: str, limit: int = 15):
-    """Simple reliable keyword search over indexed FAQs."""
-    faqs = get_all_indexed_faqs()
-    q_terms = set(query.lower().split())
-    results = []
+def search_faqs_vector(query_text: str, limit: int = 15) -> List[Tuple[Dict[str, Any], Dict[str, float]]]:
+    """
+    Performs vector similarity search against the three named vectors.
+    Returns a list of tuples: (FAQ payload, dict of individual vector similarity scores).
+    """
+    client = get_db_client()
+    query_vector = get_embedding(query_text, is_query=True)
+    
+    # Query against question vector
+    res_q = client.search(
+        collection_name=COLLECTION_NAME,
+        query_vector=("question", query_vector),
+        limit=limit,
+        with_payload=True
+    )
+    
+    # Query against combined vector
+    res_c = client.search(
+        collection_name=COLLECTION_NAME,
+        query_vector=("combined", query_vector),
+        limit=limit,
+        with_payload=True
+    )
+    
+    # Query against answer vector
+    res_a = client.search(
+        collection_name=COLLECTION_NAME,
+        query_vector=("answer", query_vector),
+        limit=limit,
+        with_payload=True
+    )
+    
+    # Aggregate scores for each FAQ id or anchor URL
+    # Map from URL/id to a tuple of (payload, scores_dict)
+    faq_map: Dict[str, Tuple[Dict[str, Any], Dict[str, float]]] = {}
+    
+    def process_results(results, vector_name):
+        for hit in results:
+            url = hit.payload.get("url", "")
+            if not url:
+                continue
+            if url not in faq_map:
+                faq_map[url] = (hit.payload, {"question": 0.0, "answer": 0.0, "combined": 0.0})
+            faq_map[url][1][vector_name] = hit.score
 
-    for faq in faqs:
-        text = f"{faq.get('question','')} {faq.get('answer','')}".lower()
-        score = sum(1 for term in q_terms if term in text)
-        if score > 0:
-            item = dict(faq)
-            item["score"] = float(score)
-            results.append(item)
-
-    results.sort(key=lambda x: x.get("score", 0), reverse=True)
-    return results[:limit]
-
+    process_results(res_q, "question")
+    process_results(res_c, "combined")
+    process_results(res_a, "answer")
+    
+    return list(faq_map.values())

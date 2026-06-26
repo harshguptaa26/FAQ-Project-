@@ -1,9 +1,7 @@
 # 🚀 SAMAGAMA – AI-Powered Self-Learning FAQ & Student Intelligence Portal
 
 > **An intelligent FAQ system that continuously learns from student interactions, identifies confusion hotspots, prioritizes critical information, and helps administrators improve communication automatically.**
-
 https://faq-eta-six.vercel.app/
-
 ---
 
 ## 📖 Overview
